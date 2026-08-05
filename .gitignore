@@ -11,3 +11,6 @@ films/**/concat.txt
 
 # node
 node_modules/
+
+# local tool state
+.claude-flow/

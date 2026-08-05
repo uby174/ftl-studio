@@ -38,7 +38,7 @@ export function loadKeys() {
     anthropic: k.ANTHROPIC_API_KEY || process.env.ANTHROPIC_API_KEY || '',
     google: k.GOOGLE_API_KEY || process.env.GOOGLE_API_KEY || '',
     models: Object.assign(
-      { compiler: 'claude-opus-5', image: 'gemini-2.5-flash-image', video: 'veo-3.1-generate-preview' },
+      { compiler: 'claude-opus-5', image: 'gemini-2.5-flash-image', video: 'veo-3.1-generate-preview', judge: 'gemini-2.5-flash' },
       k.models || {},
     ),
   };
@@ -77,20 +77,44 @@ HARD RULES:
   time-of-day lock, weather, textures of age, one named light source. ~110 words.
 - Both stills share one photographic DNA: shallow depth of field, fine 35mm film
   grain, motivated light from nameable sources, a locked palette. Bake it into both.
-- shots: an arc of small beats (arrive -> act -> payoff). Each shot:
-  * seconds: exactly 4, 6, or 8.
-  * firstFrame: a still-image prompt for the shot's opening frame. Refer to "the man
-    from the reference image" / "the room from the reference image" style references
-    instead of re-describing them. Compose the frame: camera angle, subject position,
-    what is lit. ~60-80 words.
-  * motion: the video prompt in Google's official Veo formula — CAMERA FIRST, then
-    the single small precise action (hands/faces/props do the acting), one causality
-    trace (a mark or reaction the action leaves on the world), "One continuous take."
-    Then audio as separate sentences: SFX: ... / Ambient noise: ... Any dialogue as:
-    The character says, "..." — 60-110 words. Short declarative sentences.
+- BEATS AND COVERAGE: the requested count is NARRATIVE BEATS. Each beat compiles
+  into 2 shots of real coverage (total shots = 2x beats, max 10). Coverage
+  patterns, choose per beat:
+  * LOOK / SEE: a shot where he hears or notices something and turns toward it
+    (motivated by off-screen sound), then a POV shot of WHAT HE SEES with
+    "noCharacter": true (the storm through glass, the dead lamp, the gap in the
+    rings). Cut logic humans feel.
+  * ACTION / INSERT: a medium of the action, then a macro insert of the hands
+    mid-task — the insert starts mid-gesture so the pair cuts on action.
+  * ACTION / REACTION: the deed, then his face reacting to the result.
+- STAKES: beat 1 must show WHY (the problem, the threat), the final beat must
+  show SO WHAT (the result reaching the world). No task without a reason.
+- Each shot:
+  * seconds: exactly 4, 6, or 8. Prefer 4-6; only payoff shots get 8.
+  * "noCharacter": true on POV/environment shots (no person in frame).
+  * firstFrame: still-image prompt for the shot's opening frame. Refer to "the man
+    from the reference image" / "the room from the reference image". Compose:
+    camera angle + height, subject position, what is lit. ~60-80 words.
+  * motion: Google's official Veo formula — CAMERA FIRST, then ONE action.
+    HUMAN IMPERFECTION LAW: every action with the character includes one human
+    friction — a hesitation, an adjusted grip, a breath fogging in the cold, a
+    second try, a glance toward the storm, weight visibly carried. Hands are
+    cold-stiff, never machine-smooth. Include one causality trace (a mark the
+    action leaves). "One continuous take." Audio as separate sentences:
+    SFX: ... / Ambient noise: ... — include one OFF-SCREEN sound that motivates
+    a look. 60-110 words, short declarative sentences.
   * Phrase all exclusions positively (say what IS there, never "no X" / "don't").
-- If 3 or more shots, exactly one is a macro insert (extreme close-up of hands or a
-  material detail).
+
+IDENTITY IS REFERENCE-ONLY (absolute): firstFrame and motion NEVER name clothing,
+headwear, gloves, hair, face details, or new props — write only "the man from the
+reference image" and let the reference supply identity. Wardrobe exists ONLY in
+characterStill. Props exist ONLY if introduced by the story (the tool roll, the
+named repair part). A cap, hat, or glove change invented mid-film is a defect.
+
+WORLD-STATE TIMELINE (absolute): any object that changes during the film (the lamp:
+dead vs lit; a repaired part) has exactly ONE state per shot, stated in every
+firstFrame ("the great lamp is dead and dark" / "the lamp now burns"). The state
+changes ONLY inside the shot whose action changes it, and never reverts.
 
 DIRECTOR'S RULES (these override everything else about composition):
 - Every firstFrame is a CANDID FILM STILL, never a portrait: the character is
@@ -112,7 +136,7 @@ DIRECTOR'S RULES (these override everything else about composition):
 
 OUTPUT: ONLY a JSON object, no markdown fences, exactly this shape:
 {"title":"kebab-case-short-title","characterStill":"...","setStill":"...",
- "shots":[{"n":1,"title":"...","seconds":8,"firstFrame":"...","motion":"..."}]}`;
+ "shots":[{"n":1,"title":"...","seconds":6,"firstFrame":"...","motion":"...","noCharacter":false}]}`;
 
 export async function compileFilm(cfg, seed, nShots) {
   const res = await fetch('https://api.anthropic.com/v1/messages', {
@@ -124,9 +148,40 @@ export async function compileFilm(cfg, seed, nShots) {
     },
     body: JSON.stringify({
       model: cfg.models.compiler,
-      max_tokens: 8000,
+      max_tokens: 16000,
       system: COMPILER_SYSTEM,
-      messages: [{ role: 'user', content: `FILM DESCRIPTION: "${seed}"\nSHOTS: ${nShots}\nCompile the production plan.` }],
+      output_config: {
+        format: {
+          type: 'json_schema',
+          schema: {
+            type: 'object',
+            properties: {
+              title: { type: 'string' },
+              characterStill: { type: 'string' },
+              setStill: { type: 'string' },
+              shots: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    n: { type: 'integer' },
+                    title: { type: 'string' },
+                    seconds: { type: 'integer', enum: [4, 6, 8] },
+                    firstFrame: { type: 'string' },
+                    motion: { type: 'string' },
+                    noCharacter: { type: 'boolean' },
+                  },
+                  required: ['n', 'title', 'seconds', 'firstFrame', 'motion', 'noCharacter'],
+                  additionalProperties: false,
+                },
+              },
+            },
+            required: ['title', 'characterStill', 'setStill', 'shots'],
+            additionalProperties: false,
+          },
+        },
+      },
+      messages: [{ role: 'user', content: `FILM DESCRIPTION: "${seed}"\nBEATS: ${nShots}\nCompile the production plan.` }],
     }),
   });
   const data = await res.json();
@@ -171,8 +226,68 @@ export async function genImage(cfg, prompt, refPngs = [], tries = 3) {
   throw new Error(`image model returned no image after ${tries} tries (${lastErr})`);
 }
 
-// ---------- step 3: Veo image-to-video ----------
+// ---------- step 3a: Gemini Omni image-to-video (Interactions API) ----------
+export async function genVideoOmni(cfg, prompt, framePng, seconds, outPath) {
+  const base = 'https://generativelanguage.googleapis.com/v1beta';
+  const body = {
+    model: cfg.models.video,
+    input: [
+      { type: 'image', data: fs.readFileSync(framePng).toString('base64'), mime_type: 'image/png' },
+      { type: 'text', text: `${prompt} Target duration: about ${seconds} seconds. 16:9 widescreen.` },
+    ],
+    response_format: { type: 'video', delivery: 'uri' },
+    generation_config: { video_config: { task: 'image_to_video' } },
+  };
+  let res = await fetch(`${base}/interactions`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', 'x-goog-api-key': cfg.google },
+    body: JSON.stringify(body),
+  });
+  let data = await res.json();
+  if (!res.ok) throw new Error(`Omni request rejected: ${data?.error?.message || res.status}`);
+
+  const t0 = Date.now();
+  while (data.status && !['completed', 'failed'].includes(data.status)) {
+    await new Promise(r => setTimeout(r, 10000));
+    process.stdout.write(`\r  … Omni rendering (${Math.round((Date.now() - t0) / 1000)}s)`);
+    const p = await fetch(`${base}/interactions/${data.id}`, { headers: { 'x-goog-api-key': cfg.google } });
+    data = await p.json();
+    if (Date.now() - t0 > 10 * 60 * 1000) throw new Error('Omni timed out after 10 minutes');
+  }
+  if (data.status === 'failed') throw new Error(`Omni interaction failed: ${JSON.stringify(data).slice(0, 200)}`);
+  const outStep = (data.steps || []).filter(s => s.type === 'model_output').pop();
+  const vid = (outStep?.content || []).find(c => c.type === 'video');
+  if (!vid) throw new Error(`no video in Omni response (${JSON.stringify(data).slice(0, 200)})`);
+  if (vid.data) { fs.writeFileSync(outPath, Buffer.from(vid.data, 'base64')); return; }
+  if (!vid.uri) throw new Error('Omni video has neither data nor uri');
+  // uri delivery: uri may serve raw media directly, or a file-status JSON to poll
+  const fileUrl = vid.uri.startsWith('http') ? vid.uri : `${base}/${vid.uri}`;
+  while (true) {
+    const r = await fetch(fileUrl, { headers: { 'x-goog-api-key': cfg.google } });
+    const ct = r.headers.get('content-type') || '';
+    if (!ct.includes('json')) { // raw media
+      if (!r.ok) throw new Error(`Omni media fetch failed: HTTP ${r.status}`);
+      fs.writeFileSync(outPath, Buffer.from(await r.arrayBuffer()));
+      return;
+    }
+    const f = await r.json();
+    const state = f.state || f.file?.state;
+    if (state === 'FAILED') throw new Error('Omni video file FAILED');
+    if (state === 'ACTIVE' || !state) {
+      const dl = await fetch(`${fileUrl}:download?alt=media`, { headers: { 'x-goog-api-key': cfg.google } });
+      if (!dl.ok) throw new Error(`Omni download failed: HTTP ${dl.status}`);
+      fs.writeFileSync(outPath, Buffer.from(await dl.arrayBuffer()));
+      return;
+    }
+    await new Promise(r2 => setTimeout(r2, 5000));
+    process.stdout.write(`\r  … Omni file processing (${Math.round((Date.now() - t0) / 1000)}s)`);
+    if (Date.now() - t0 > 12 * 60 * 1000) throw new Error('Omni file timed out');
+  }
+}
+
+// ---------- step 3b: Veo image-to-video ----------
 export async function genVideo(cfg, prompt, framePng, seconds, outPath) {
+  if (/omni/i.test(cfg.models.video)) return genVideoOmni(cfg, prompt, framePng, seconds, outPath);
   const base = 'https://generativelanguage.googleapis.com/v1beta';
   const imgB64 = fs.readFileSync(framePng).toString('base64');
   const wantRes = seconds >= 8 ? '1080p' : '720p'; // Veo: 1080p only at 8s
@@ -234,28 +349,65 @@ async function listModels(cfg) {
 
 function haveFfmpeg() { try { execSync('ffmpeg -version', { stdio: 'ignore' }); return true; } catch { return false; } }
 
+// Closed-loop QC: a vision judge checks every candidate frame against canon
+// before any video money is spent. Judge failure = pass (never blocks pipeline).
+export async function auditFrame(cfg, framePath, charPath, setPath, noCharacter) {
+  try {
+    const parts = [];
+    if (!noCharacter) parts.push({ inlineData: { mimeType: 'image/png', data: fs.readFileSync(charPath).toString('base64') } });
+    parts.push({ inlineData: { mimeType: 'image/png', data: fs.readFileSync(setPath).toString('base64') } });
+    parts.push({ inlineData: { mimeType: 'image/png', data: fs.readFileSync(framePath).toString('base64') } });
+    parts.push({
+      text: noCharacter
+        ? 'Image 1 is the canon room of a film (note the lamp design and materials). Image 2 is a candidate frame. Reply ONLY JSON: {"sameLamp":boolean,"issues":[string]}. sameLamp is true only if the lamp/lens design matches the canon room. List concrete visual mismatches in issues.'
+        : 'Image 1 is the canon character of a film. Image 2 is the canon room (note the lamp design). Image 3 is a candidate frame. Reply ONLY JSON: {"sameMan":boolean,"wardrobeMatch":boolean,"sameLamp":boolean,"issues":[string]}. sameMan: same face. wardrobeMatch: identical clothing — any added cap, hat, different gloves or coat is false. sameLamp: lamp design matches canon room (true if lamp not visible). List concrete mismatches in issues.',
+    });
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${cfg.models.judge}:generateContent`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', 'x-goog-api-key': cfg.google },
+      body: JSON.stringify({ contents: [{ parts }] }),
+    });
+    const data = await res.json();
+    if (!res.ok) return { pass: true, issues: [] };
+    const text = (data.candidates?.[0]?.content?.parts || []).map(p => p.text || '').join('');
+    const m = text.match(/\{[\s\S]*\}/);
+    if (!m) return { pass: true, issues: [] };
+    const v = JSON.parse(m[0]);
+    const pass = noCharacter ? v.sameLamp !== false
+      : v.sameMan !== false && v.wardrobeMatch !== false && v.sameLamp !== false;
+    return { pass, issues: v.issues || [] };
+  } catch { return { pass: true, issues: [] }; }
+}
+
 function clipDuration(f) {
   return parseFloat(execSync(
     `ffprobe -v quiet -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "${f}"`,
   ).toString().trim());
 }
 
-// Post-production: normalize every clip, unified grade + grain, 0.3s cross-
-// dissolves with audio crossfades, fade in/out. One film, one look.
+// Post-production: real film editing — HARD CUTS on action (enter each clip
+// late, leave early), unified grade + grain, fade in/out, mixed audio.
+// Dissolves removed: cross-dissolve between beats is a slideshow tell.
 export function finishFilm(dir, clips) {
-  const X = 0.3;
+  const HEAD = 0.35, TAIL = 0.15; // enter mid-action, exit before settle
   const durs = clips.map(clipDuration);
   const inputs = clips.map(c => `-i "${c}"`).join(' ');
-  const norm = clips.map((_, i) =>
-    `[${i}:v]scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,fps=24,setsar=1,format=yuv420p[v${i}];[${i}:a]aresample=48000[a${i}]`).join(';');
-  let vChain = '', aChain = '', prevV = 'v0', prevA = 'a0', offset = 0;
-  for (let i = 1; i < clips.length; i++) {
-    offset += durs[i - 1] - X;
-    vChain += `;[${prevV}][v${i}]xfade=transition=fade:duration=${X}:offset=${offset.toFixed(3)}[vx${i}]`;
-    aChain += `;[${prevA}][a${i}]acrossfade=d=${X}[ax${i}]`;
-    prevV = `vx${i}`; prevA = `ax${i}`;
+  const segs = [];
+  const trimmed = [];
+  for (let i = 0; i < clips.length; i++) {
+    const start = i === 0 ? 0 : HEAD;
+    const end = Math.max(start + 1, durs[i] - TAIL);
+    trimmed.push(end - start);
+    segs.push(
+      `[${i}:v]trim=${start}:${end.toFixed(3)},setpts=PTS-STARTPTS,scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,fps=24,setsar=1,format=yuv420p[v${i}]` +
+      `;[${i}:a]atrim=${start}:${end.toFixed(3)},asetpts=PTS-STARTPTS,aresample=48000[a${i}]`);
   }
-  const total = durs.reduce((a, b) => a + b, 0) - X * (clips.length - 1);
+  const norm = segs.join(';');
+  const concatIn = clips.map((_, i) => `[v${i}][a${i}]`).join('');
+  const vChain = `;${concatIn}concat=n=${clips.length}:v=1:a=1[vc][ac]`;
+  const aChain = '';
+  const prevV = 'vc', prevA = 'ac';
+  const total = trimmed.reduce((a, b) => a + b, 0);
   const grade = `;[${prevV}]eq=contrast=1.05:saturation=0.93:brightness=-0.01,noise=alls=5:allf=t,` +
     `fade=t=in:st=0:d=0.6,fade=t=out:st=${(total - 0.8).toFixed(3)}:d=0.8[vout]` +
     `;[${prevA}]afade=t=in:st=0:d=0.5,afade=t=out:st=${(total - 0.9).toFixed(3)}:d=0.9,loudnorm=I=-16:TP=-1.5[aout]`;
@@ -317,23 +469,33 @@ export async function makeFilm(cfg, opts) {
     if (onlyShot && String(s.n) !== String(onlyShot)) continue;
     const framePath = path.join(dir, `shot${s.n}_frame.png`);
     if (!fs.existsSync(framePath) || redoStills) {
-      log(`shot ${s.n} "${s.title}" — first frame …`);
+      log(`shot ${s.n} "${s.title}" — first frame${s.noCharacter ? ' (POV, no character)' : ''} …`);
       // frame chaining: previous shot's frame locks the set geometry for this one
       const prevFrame = path.join(dir, `shot${s.n - 1}_frame.png`);
-      const refs = [charPath, setPath];
+      const baseRefs = s.noCharacter ? [setPath] : [charPath, setPath];
+      const refs = [...baseRefs];
       let chainNote = '';
-      if (fs.existsSync(prevFrame)) { refs.push(prevFrame); chainNote = ' The third image is a frame already filmed from this same movie: keep the room, the lamp design, its geometry and its state of light EXACTLY as they appear there — this shot happens moments later in the same place.'; }
-      const framePrompt = (note) =>
-        `The first image is the man. The second image is the room. Create one new photorealistic 16:9 widescreen cinematic film still of this exact man inside this exact room, keeping his face, wardrobe, the room's lamp design and lighting identical to the references.${note} This is a candid frame from a movie: he is mid-action with his eyes on his work, never looking at the camera, placed off-center with foreground depth. Full-bleed widescreen, zero black bars or borders. Composition: ${s.firstFrame}`;
+      if (fs.existsSync(prevFrame)) { refs.push(prevFrame); chainNote = ` The ${refs.length === 3 ? 'third' : 'second'} image is a frame already filmed from this same movie: keep the room, the lamp design, its geometry and its state of light EXACTLY as they appear there — this shot happens moments later in the same place.`; }
+      const framePrompt = (note) => s.noCharacter
+        ? `The first image is the room. Create one new photorealistic 16:9 widescreen cinematic film still of this exact room, keeping the lamp design, materials and lighting identical to the reference. The lamp in the reference is the ONLY lamp design in this film — reproduce it exactly.${note} This is a POV frame from a movie — what a person standing in the room sees. Nobody is in frame. Full-bleed widescreen, zero black bars or borders. Composition: ${s.firstFrame}`
+        : `The first image is the man. The second image is the room. Create one new photorealistic 16:9 widescreen cinematic film still of this exact man inside this exact room, keeping his face, his exact clothing with nothing added or removed, the room's lamp design and lighting identical to the references. The lamp in the room reference is the ONLY lamp design in this film — reproduce it exactly.${note} This is a candid frame from a movie: he is mid-action with his eyes on his work, never looking at the camera, placed off-center with foreground depth. Full-bleed widescreen, zero black bars or borders. Composition: ${s.firstFrame}`;
       // progressive reference fallback: full chain -> canon only -> set only
       const attempts = [[refs, chainNote]];
-      if (refs.length > 2) attempts.push([[charPath, setPath], '']);
-      attempts.push([[setPath], ' There is only one reference image: the room. Keep it exact.']);
+      if (refs.length > baseRefs.length) attempts.push([baseRefs, '']);
+      if (!s.noCharacter) attempts.push([[setPath], ' There is only one reference image: the room. Keep it exact.']);
       let done = false;
       for (const [r, note] of attempts) {
         try {
-          fs.writeFileSync(framePath, await genImage(cfg, framePrompt(note), r));
-          ok(`shot${s.n}_frame.png${r.length < refs.length ? ` (composited from ${r.length} reference${r.length > 1 ? 's' : ''})` : ''}`);
+          // closed loop: generate -> vision-judge against canon -> regenerate with correction
+          let correction = '', verdict = null;
+          for (let qc = 0; qc < 3; qc++) {
+            fs.writeFileSync(framePath, await genImage(cfg, framePrompt(note) + correction, r));
+            verdict = await auditFrame(cfg, framePath, charPath, setPath, s.noCharacter);
+            if (verdict.pass) break;
+            log(`  audit reject (${verdict.issues.join('; ').slice(0, 90)}) — regenerating …`);
+            correction = ` PREVIOUS ATTEMPT WAS REJECTED for these defects: ${verdict.issues.join('; ')}. Fix exactly these while keeping everything else identical to the references.`;
+          }
+          ok(`shot${s.n}_frame.png${verdict && !verdict.pass ? ' (audit warnings kept)' : ''}${r.length < refs.length ? ` (${r.length} refs)` : ''}`);
           done = true; break;
         } catch (e) { log(`  frame with ${r.length} refs failed (${e.message.slice(0, 60)}) — reducing references …`); }
       }
@@ -349,7 +511,7 @@ export async function makeFilm(cfg, opts) {
     log(`shot ${s.n} "${s.title}" — Veo ${s.seconds}s (${cfg.models.video}) …`);
     emit('video', s);
     try {
-      const motion = `${s.motion} The action is already underway when the shot begins and is still in motion when it ends — natural continuous human movement, no held pose, no freeze.`;
+      const motion = `${s.motion} The action is already underway when the shot begins and is still in motion when it ends — natural continuous human movement with real weight, breath and slight imperfection, no held pose, no freeze. Physical persistence: every object keeps its exact place, shape and state for the whole shot unless this action moves it; light sources hold constant intensity; the same items that are in frame at the start are in frame at the end.`;
       await genVideo(cfg, motion, framePath, s.seconds, clipPath);
       console.log('');
       ok(`shot${s.n}.mp4`);

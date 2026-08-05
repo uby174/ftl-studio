@@ -1,0 +1,71 @@
+{
+  "title": "the-city-in-the-blank-map",
+  "characterStill": "Photorealistic portrait, fine 35mm film grain, shallow depth of field, subject centered. A weathered traveler in his fifties, skin burned brick-red by road sun. Face-lock: a hooked nose with a healed break at the bridge, a pale scar splitting the left eyebrow, deep-set dark eyes beneath a heavy shelf of brow, a grey-streaked beard cropped square at the jaw, sun-cracked lips, a small mole under the right cheekbone. He wears all of: a dust-ochre wool travel robe, an indigo wrapped headcloth with a loose tail, a faded indigo sash, scuffed brown boots, and a cracked leather map roll on a shoulder strap holding vellum, a reed pen and a stoppered ink horn. Motivated golden light from the low setting sun rakes frame-left; amber, ochre, verdigris and deep indigo palette.",
+  "setStill": "Photorealistic location still, fine 35mm film grain, shallow depth of field, 16:9. A bare limestone cliff edge at golden hour, wind-scoured and dust-hazed. Centerpiece: a leaning carved stone waymarker, chest-high, its script worn shallow, its shoulders furred with orange lichen and grooved where centuries of rope have dragged. Cracked pale rock, dry thistle, drifting grit. Far below and to frame-left, a vast valley city lies in amber haze: minarets, ribbed domes, garden squares, a long arcaded aqueduct, bazaar streets threading to the horizon; its lanterns are unlit. The single named light source is the low setting sun, raking from frame-left. Amber, ochre, verdigris and deep indigo palette.",
+  "shots": [
+    {
+      "n": 1,
+      "title": "arrival-at-the-waymarker",
+      "seconds": 6,
+      "firstFrame": "Wide candid film still, camera low at knee height, 16:9. The man from the reference image stands off-center at frame-right on the ridge path of the room from the reference image, facing frame-left toward the leaning stone waymarker; his leather map roll hangs tied shut at his hip. Blurred dry thistle fills the foreground. The valley below is drowned in dust haze, the city hidden. Low sun rakes from frame-left.",
+      "motion": "Camera pushes slowly forward at knee height along the ridge path. The man from the reference image walks the last three steps and stops hard at the waymarker, catching the stone with one hand to take his weight, knees giving slightly, chest heaving; his boots drag a pale scar through the dust that stays there. He hesitates, then turns his head frame-left toward a sound rising from the haze. One continuous take. SFX: grit grinding under boots, wool flapping, one long tired exhale. Ambient noise: dry wind combing bare rock, an off-screen hawk cry far below the cliff.",
+      "noCharacter": false
+    },
+    {
+      "n": 2,
+      "title": "the-blank-edge",
+      "seconds": 4,
+      "firstFrame": "Macro insert, camera high and angled down over the man's shoulder, 16:9. Only the hands of the man from the reference image, off-center at frame-left, mid-gesture as the leather map roll opens across his thigh; the vellum inside is unrolled part-way, its lower edge a wide blank space where a city should be drawn. Sunlit dust drifts in the shallow foreground. Warm raking light from frame-left.",
+      "motion": "Camera holds close and slightly high, drifting a few centimetres right. The hands of the man from the reference image finish unrolling the vellum, cold-stiff fingers fumbling the tie, losing it once, then pinning the sheet flat with a thumb; the blank lower edge fills the frame and a dusty thumbprint smears onto the clean vellum. One continuous take. SFX: leather creaking, stiff vellum crackling, breath through the nose. Ambient noise: wind hiss across the cliff, a faint off-screen bell somewhere under the haze.",
+      "noCharacter": false
+    },
+    {
+      "n": 3,
+      "title": "he-hears-the-valley",
+      "seconds": 4,
+      "firstFrame": "Medium candid film still, eye-level camera, 16:9. The man from the reference image sits off-center at frame-right against the leaning waymarker, the unrolled blank vellum held across his knees, eyes down on its empty edge. A blurred thistle head crosses the foreground at frame-left. Golden sun burns the dust behind him. The valley beyond is still veiled in haze.",
+      "motion": "Camera holds at eye level, then eases a slow arc to frame-left. The man from the reference image lifts his head from the blank vellum and turns toward the valley, squinting, one hand rising to shield his eyes and pressing a crease into the sheet he has not let go of; his lips part, and he holds a breath. One continuous take. SFX: cloth shifting, vellum bending under his grip, a caught breath. Ambient noise: wind dropping away, and an off-screen call to prayer rising thin and clear from below the cliff.",
+      "noCharacter": false
+    },
+    {
+      "n": 4,
+      "title": "the-city-revealed",
+      "seconds": 8,
+      "firstFrame": "Extreme wide point-of-view film still from the cliff edge, camera high above the valley, 16:9. Blurred cliff-edge rock and thistle anchor the lower frame-right foreground. The great city lies off-center at frame-left below: minarets, ribbed domes, green garden squares, a long arcaded aqueduct, bazaar streets running to the horizon. Its lanterns are unlit. Low golden sun floods the haze from frame-left.",
+      "motion": "Camera drifts slowly forward past the blurred cliff rock and tilts down over the valley. The dust haze thins in the wind and the city sharpens layer by layer, domes catching the low sun, the aqueduct's arches throwing long shadows across orchards, cart traffic crawling on the river road; a flock lifts from a rooftop and crosses the frame. One continuous take. SFX: wind buffeting the microphone, cloth snapping. Ambient noise: the far pooled murmur of a whole city, hammering, animals, and an off-screen call to prayer echoing between the hills.",
+      "noCharacter": true
+    },
+    {
+      "n": 5,
+      "title": "the-first-line",
+      "seconds": 6,
+      "firstFrame": "Medium-wide candid film still, camera low near the ground, 16:9. The man from the reference image kneels off-center at frame-right on the cliff lip, facing frame-left, the blank vellum spread on flat rock with a lichened stone chip weighting one corner; the reed pen and stoppered ink horn lie beside it. Blurred thistle in the foreground. The city below is sunlit, its lanterns unlit.",
+      "motion": "Camera holds low and creeps in past the thistle. The man from the reference image unstoppers the ink horn, wedges it in a crack, and draws the first long line across the blank vellum, his cold-stiff hand wavering so he stops, re-grips the reed pen lower, and starts the stroke again; the wet ink line stays black on the empty edge and a drop spots the rock. He glances up at the domes, then back down. One continuous take. SFX: pen scratching, stone chip grating, a short grunt. Ambient noise: wind over the cliff, distant off-screen city murmur.",
+      "noCharacter": false
+    },
+    {
+      "n": 6,
+      "title": "domes-in-ink",
+      "seconds": 4,
+      "firstFrame": "Macro insert, overhead camera looking straight down, 16:9. The hands of the man from the reference image, off-center at frame-left, mid-stroke with the reed pen on the vellum; one long horizon line already crosses the blank edge and two small dome curves are half-drawn beneath it. The weighting stone chip and open ink horn sit in the blurred foreground. Raking gold light from frame-left.",
+      "motion": "Camera holds overhead, breathing slightly with the wind. The hands of the man from the reference image finish the second dome and add a needle-thin minaret, pausing to blow warmth into the pen hand before the last stroke; the nib catches a fibre and leaves a small ink blot that he thumbs into the vellum rather than lifting away. One continuous take. SFX: nib scratching, a puff of breath, vellum shifting under the stone chip. Ambient noise: wind hiss, an off-screen call to prayer answering itself across the valley.",
+      "noCharacter": false
+    },
+    {
+      "n": 7,
+      "title": "the-lanterns-wake",
+      "seconds": 6,
+      "firstFrame": "Wide point-of-view film still from the cliff edge, camera high above the valley, 16:9. Blurred rock and the corner of the drying vellum sit in the lower frame-right foreground. The city fills frame-left in late amber light, the sun almost gone behind the far ridge. The bazaar lanterns are unlit and the streets lie in blue shadow.",
+      "motion": "Camera holds high, then tilts down a few degrees over the darkening valley. The last sun slips off the domes and lanterns kindle in ones and twos along the bazaar streets, spreading until the whole city is stitched with warm points of light, the aqueduct arches picked out and the river carrying the reflection. Smoke rises from cook fires. One continuous take. SFX: wind rising, a distant dog. Ambient noise: the swelling evening murmur of the city, off-screen shutters banging closed somewhere below the cliff.",
+      "noCharacter": true
+    },
+    {
+      "n": 8,
+      "title": "the-map-carries-the-city",
+      "seconds": 8,
+      "firstFrame": "Wide reverse candid film still, camera low and behind at hip height, 16:9. The man from the reference image sits off-center at frame-right on the cliff lip facing frame-left, holding the vellum up at arm's length; the inked domes, minarets and aqueduct now fill what was the blank edge. Blurred thistle in the foreground. Below him the lantern-lit city burns gold in blue dusk.",
+      "motion": "Camera cranes slowly up and back from hip height, keeping the man from the reference image at frame-right. He lifts the vellum until the inked skyline lines up with the lantern-lit city below, holds it there, adjusts his grip as the wind bows the sheet, and lets out a breath that shakes; he lowers the map, rolls it against his knee and slides it into the leather map roll, cinching the tie twice. The dust drag mark from his arrival still marks the ridge. One continuous take. SFX: vellum snapping in wind, leather creaking, a low laugh. Ambient noise: night wind, the off-screen city murmur rising from the valley.",
+      "noCharacter": false
+    }
+  ]
+}

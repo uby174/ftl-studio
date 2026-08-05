@@ -1,39 +1,71 @@
 {
-  "title": "the-keeper-and-the-ninth-prism",
-  "characterStill": "Photorealistic portrait of an aged lighthouse keeper, centered, chest-up, three-quarter turn. Face-lock: a broken hooked nose with a flattened bridge; a vertical white scar splitting the left eyebrow; a heavy shelf-like brow over deep-set grey eyes; sun-cracked crow's feet fanning to both temples; a square-cropped snow-white beard; white hair combed back wet against the skull. He wears all of: an oiled navy canvas storm coat with a torn shoulder seam, a mustard wool guernsey sweater, a brass-buckled leather tool belt, and fingerless grey wool gloves. Amber oil-flame light rakes his left cheek, cold storm-blue glow fills the right. Shallow depth of field, fine 35mm film grain, palette of brass amber, sea-green and wet slate grey.",
-  "setStill": "Photorealistic interior of a lighthouse lamp room at storm dusk. Centerpiece: a man-tall rotating lens, concentric glass rings banded in tarnished brass on a geared carriage, one wedge segment missing to leave a black gap. Textures of age: salt-frosted glazing, flaking green paint, brass floor plates worn to bare metal by decades of boots, rust weeping from bolt heads. Rain hammers the curved windows; the sea beyond is bruised grey-green. The single named light source is the lamp's guttering oil flame at the lens core, throwing amber blades across the walls. Shallow depth of field, fine 35mm film grain, palette of brass amber, sea-green and wet slate grey. 16:9.",
+  "title": "the-dead-lamp",
+  "characterStill": "Photorealistic candid portrait of an old lighthouse keeper, centered, seventies, weathered sea-worn skin. Face-lock: a deep vertical scar splitting his left eyebrow, a broad nose flattened by an old break, heavy iron-grey brows shelving deep-set pale eyes, cropped white stubble beard, and a high receded hairline of wiry white hair. He wears all of: a stiff oiled-canvas storm coat darkened at the shoulders, a ribbed charcoal wool sweater, cracked leather suspenders, and fingerless grey wool gloves. Motivated amber light from a brass hand-lantern rakes one cheek; cold sea-green window light fills the other. Shallow depth of field, fine 35mm film grain, palette of oxidized brass, wet slate, kerosene amber, sea-green. 16:9.",
+  "setStill": "Photorealistic interior of a lighthouse lantern room at storm dusk, late afternoon light nearly gone. Centerpiece: a great first-order Fresnel lens, a barrel of concentric brass-caged glass rings, standing dead and dark on its iron pedestal. Salt haze streaks the curved storm glass; rain slams it in sheets. Textures of age: green verdigris on brass fittings, flaking white paint, rust weeping down rivets, worn oak floorboards slick with tracked water. One named light source, a brass hand-lantern hooked on the gallery rail, throws amber across the rings. Shallow depth of field, fine 35mm film grain, palette of oxidized brass, wet slate, kerosene amber, sea-green. 16:9.",
   "shots": [
     {
-      "1": "",
       "n": 1,
-      "title": "arrival-through-the-hatch",
-      "seconds": 8,
-      "firstFrame": "Wide establishing shot, low camera set on the brass floor plates of the room from the reference image, 16:9. The man from the reference image rises through the floor hatch at frame-right, off-center, an oilcloth-wrapped prism bundle clamped under one arm, body angled facing frame-left toward the great lens. Foreground: a rusted bolt head and a spreading puddle in soft focus. The lamp's oil flame is tiny and guttering, barely alive — the room is mostly storm-dark, the black gap in the lens rings reads clearly, and the weak flame just touches his beard.",
-      "motion": "Camera pushes in slowly, low and level, holding the man at frame-right. He steps clear of the hatch, still facing frame-left, and lowers the oilcloth prism bundle onto the brass floor plate. His gloved hand presses flat on the cloth to steady it. Water runs off his coat hem and leaves a wet dark bootprint smear across the worn brass. The oil flame in the lens shivers as the draught follows him up. One continuous take. SFX: hatch timber groaning, oilcloth scraping brass, a heavy exhale. Ambient noise: rain drumming curved glass, wind moaning in the gallery rail."
-    },
-    {
-      "2": "",
-      "n": 2,
-      "title": "unrolling-the-tools",
+      "title": "the-lamp-is-dead",
       "seconds": 6,
-      "firstFrame": "Medium shot, eye-level, camera low beside the floor plate, 16:9. The man from the reference image kneels off-center at frame-right, facing frame-left, the oilcloth prism bundle before him and his wet bootprint smear still dark on the brass. Foreground: the blurred lower rings of the lens from the reference image. Amber oil-flame light catches his knuckles; storm-blue window glow rims his shoulder.",
-      "motion": "Camera holds still at eye-level, the man kneeling frame-right. He unbuckles his tool belt roll and lays the canvas flat, then folds back the oilcloth to bare the wedge prism, its cut edge flaring amber. He lifts a brass clamp key from the roll and sets it on his thigh. The opened oilcloth soaks up his bootprint water, the stain creeping outward across the cloth. One continuous take. SFX: canvas unrolling, buckle tongue clicking, glass ringing faintly on brass. Ambient noise: rain on glazing, the slow tick of the lens gears. The keeper says, \"Steady now. One piece missing is all.\""
+      "firstFrame": "Wide shot, low camera height from the floorboards, of the room from the reference image. The man from the reference image stands off-center in the right third, facing frame-left, one hand flat on the cold pedestal of the great lamp, which is dead and dark. An oilcloth tool roll sits unopened in the blurred foreground. The brass hand-lantern on the rail is the only living light. Rain floods the curved storm glass behind him.",
+      "motion": "Camera pushes in slowly at floor height. The man from the reference image turns his head toward the storm glass at an off-screen sound, hesitating with his palm still on the dead lamp's pedestal, his breath fogging in the cold air, leaving a smeared handprint in the salt dust. One continuous take. SFX: a distant ship's bell off-screen, rain hammering glass, brass ticking as it cools. Ambient noise: wind pressure moaning through the gallery door, the hand-lantern's flame guttering.",
+      "noCharacter": false
     },
     {
-      "3": "",
-      "n": 3,
-      "title": "seating-the-prism",
+      "n": 2,
+      "title": "what-the-sea-holds",
       "seconds": 4,
-      "firstFrame": "Macro insert, extreme close-up, camera at hand height, 16:9. The keeper's fingerless-gloved hands fill frame-left of centre, cradling the wedge prism into the black gap of the lens from the reference image, brass clamp key held between two fingers. Foreground: a salt-crusted brass rib in soft blur. Only the oil flame lights this, amber sliding along the prism's cut edge.",
-      "motion": "Camera stays locked in macro, hands working frame-left. Two thumbs press the wedge prism into the empty seat, and the brass clamp key turns a quarter turn, pinching the retaining bracket tight. Old paint flakes lift from the bracket and drift onto the wet oilcloth below. The oil flame's light suddenly bends through the seated prism and lays a bright amber bar across the keeper's knuckles. One continuous take. SFX: glass settling into brass, a metallic quarter-turn creak, paint flakes ticking down. Ambient noise: muffled rain, deep wind pressure against the tower."
+      "firstFrame": "POV shot through the salt-streaked storm glass of the room from the reference image, eye-level, no person in frame. Curved glass and a verdigris brass mullion frame the left foreground. Far below and off-center right, black water breaks white over a reef, and one weak yellow ship's light rides toward it. The unopened oilcloth tool roll sits blurred at the bottom edge of frame.",
+      "motion": "Camera holds, then drifts a few inches right as rain sheets across the glass. The distant ship's light rises and vanishes behind a wave, then reappears closer to the reef, leaving the water torn white where it struck. One continuous take. SFX: rain bursting on glass, the ship's bell thinning off-screen, a low structural groan. Ambient noise: wind in the lantern-room seams, surf booming far below.",
+      "noCharacter": true
     },
     {
-      "4": "",
+      "n": 3,
+      "title": "the-tool-roll",
+      "seconds": 6,
+      "firstFrame": "Medium shot, low camera height, of the room from the reference image. The man from the reference image kneels off-center in the left third, facing frame-left, unrolling the oilcloth tool roll across wet floorboards. The great lamp is dead and dark, its brass rings looming out of focus in the right foreground. Amber from the brass hand-lantern edges his shoulders; sea-green window light fills behind.",
+      "motion": "Camera tilts down and slightly in as he kneels. The man from the reference image flattens the oilcloth tool roll with a cold-stiff hand, fumbles the first tie, tries again, and lifts the flap to reveal the spare brass burner nozzle, water beading and running off the cloth onto the boards. One continuous take. SFX: wet canvas unrolling, a spanner clinking, knees cracking. Ambient noise: rain on glass, a shutter banging off-screen below.",
+      "noCharacter": false
+    },
+    {
       "n": 4,
-      "title": "the-beam-goes-out",
+      "title": "the-spare-nozzle",
+      "seconds": 4,
+      "firstFrame": "Macro insert, high camera height looking almost straight down at the opened oilcloth tool roll on wet floorboards. Two blurred fingertips of the man from the reference image are already mid-lift on the spare brass burner nozzle, off-center left. The nozzle's threads catch amber from the brass hand-lantern. The dead, dark great lamp is a soft brass shape at the top of frame.",
+      "motion": "Camera holds tight and drifts a hair left as the hands work. Cold-stiff fingers of the man from the reference image lift the spare brass burner nozzle clear of the oilcloth tool roll, adjust the grip when it nearly slips, and thumb grit from its threads, leaving a clean bright arc in the tarnish. One continuous take. SFX: brass scraping cloth, a short breath, thumb rasping metal. Ambient noise: rain, the ship's bell faint off-screen.",
+      "noCharacter": false
+    },
+    {
+      "n": 5,
+      "title": "threading-the-burner",
+      "seconds": 6,
+      "firstFrame": "Close shot, eye-level, of the man from the reference image off-center right, facing frame-left, reaching between the open brass cage rings of the great lamp, which is dead and dark. The spare brass burner nozzle is half-seated in the burner housing. Out-of-focus lens prisms fracture the amber hand-lantern light across the foreground.",
+      "motion": "Camera arcs a few degrees left around the brass rings. The man from the reference image turns the spare brass burner nozzle into the housing, feels it cross-thread, backs it off with a muttered breath, and seats it true on the second try, oil smearing dark across the bright brass. One continuous take. SFX: metal threads catching, a spanner's quarter-turn ratchet, a sharp exhale. Ambient noise: rain hammering, wind rising, the ship's bell off-screen closer now.",
+      "noCharacter": false
+    },
+    {
+      "n": 6,
+      "title": "fuel-and-hesitation",
+      "seconds": 6,
+      "firstFrame": "Medium close shot, slightly low camera height, of the man from the reference image off-center left, facing frame-left, hand resting on the fuel valve of the great lamp, which remains dead and dark with the spare brass burner nozzle now seated and gleaming. His eyes stay on the burner. Blurred brass cage rings frame the right foreground; the hand-lantern burns behind.",
+      "motion": "Camera holds, then eases in slightly on his face. The man from the reference image opens the fuel valve a half-turn, freezes at the hiss, and lets his shoulders drop as kerosene wets the seated brass burner nozzle and drips a dark bead onto the pedestal. His breath fogs. One continuous take. SFX: pressurized hiss, a valve squeal, one liquid drip. Ambient noise: the ship's bell hard off-screen right, rain, wind through the gallery door.",
+      "noCharacter": false
+    },
+    {
+      "n": 7,
+      "title": "ignition",
       "seconds": 8,
-      "firstFrame": "Wide reverse payoff shot, high camera behind the curved gallery glazing looking back into the lamp room, 16:9. The man from the reference image stands off-center at frame-right in silhouette, facing frame-left, one hand on the lens carriage, the brass clamp key still in the other. Foreground: rain sheeting down the salt-frosted glass. The seated prism burns brightest of all the rings.",
-      "motion": "Camera drifts slowly upward and back behind streaming glass, keeping the keeper small at frame-right. He releases the lens carriage and the geared lens turns; the newly seated prism swings past and throws one hard amber blade out through the rain. The beam lights the falling water and paints a moving bar of gold across his coat and the wet brass floor. He lowers the clamp key to his side. One continuous take. SFX: gear teeth engaging, a low mechanical hum, the key tapping his belt. Ambient noise: rain roar, wind, distant surf on rock."
+      "firstFrame": "Wide shot, low camera height from the floorboards, of the room from the reference image. The man from the reference image stands off-center right, facing frame-left, leaning in through the brass rings with a storm match from the oilcloth tool roll. The great lamp is still dead and dark, the spare brass burner nozzle wet with fuel. The tool roll lies open in the foreground.",
+      "motion": "Camera pushes in slowly, then holds. The man from the reference image strikes a storm match from the oilcloth tool roll, shields it as wind kills it, strikes a second, and touches it to the spare brass burner nozzle; the great lamp catches and burns, flooding the rings with white light and leaving a scorch of soot on the burner throat. He turns his face from the heat. One continuous take. SFX: match rasp, a soft ignition thump, glass ringing. Ambient noise: rain, wind, the ship's bell off-screen.",
+      "noCharacter": false
+    },
+    {
+      "n": 8,
+      "title": "the-beam-finds-her",
+      "seconds": 8,
+      "firstFrame": "Exterior wide shot, high camera height from seaward, no person in frame, storm dusk. The lighthouse tower stands off-center left, its lantern room blazing; the great lamp now burns and its beam cuts through rain. Wet black rock fills the near foreground. Far off-center right, one small ship's light rides the swell beside the white water of the reef.",
+      "motion": "Camera cranes slowly back and right as rain crosses the lens. The beam from the now-burning great lamp sweeps across the water, strikes the reef white, and holds on the small ship, which turns hard away, its wake bending a bright curve into the black swell. One continuous take. SFX: surf detonating on rock, a foghorn answering off-screen, rigging clatter. Ambient noise: wind across open water, rain on stone.",
+      "noCharacter": true
     }
   ]
 }
