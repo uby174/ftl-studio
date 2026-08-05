@@ -1,0 +1,38 @@
+CINEMATIC SHOT BRIEF — one single continuous take: no cuts, no scene
+changes, no time skips, no montage. Everything below describes one film;
+only the shot at the end is rendered, the rest keeps it consistent.
+
+Craft style for this film: one small precise physical action; hands, faces
+and props do the acting. All light comes from sources visible in the scene.
+Shallow depth of field with one sharp focus plane. The camera moves slowly
+or stays locked. Every surface shows age, wear and texture. Background life
+stays quiet and secondary, never distracting from the main action.
+
+THE CHARACTER — the same man in every shot of this film:
+An old lighthouse keeper in his seventies — THE SAME MAN in every shot: a square, deeply lined face; a flattened, once-broken nose; small pale-grey eyes under heavy white brows; short-cropped white beard and stubble; thick white hair combed back; a small scar splitting his left eyebrow. Stocky and slightly stooped, broad weathered hands with calloused fingertips. He ALWAYS wears, in every shot, all of: a coarse oat-colored wool sweater flecked with lint, a dark brown brass-buttoned keeper's waistcoat gone soft with age over the sweater, and dark canvas trousers. He moves unhurried and economical, hands working from memory, humming low under his breath. His presence marks the world: his boots leave faint damp prints on the iron, his rag leaves clean arcs through the dust, and the rail he always grips is polished to a shine.
+
+THE LOCATION — the same place in every shot:
+The round lantern room at the top of an old stone lighthouse at dusk: a great Fresnel lens like a glass beehive at the center, riveted iron floor, whitewashed stone, brass fittings polished by decades of hands, salt bloom on the tall storm panes. Outside, a black storm front closes over a grey sea; gulls shelter on the gallery rail; a foghorn sounds far below. The room reacts to everything: dust stirs at each step, the iron rings faintly underfoot, and the lantern flame answers every draft.
+
+PHOTOGRAPHY (applies to the whole film):
+- time: LOCKED at dusk under a black storm front, in every shot -- dim slate-blue failing light, never daytime, never clear sky
+- dof: shallow, f1.8-2.8, one sharp subject plane, creamy falloff
+- grain: fine 35mm, gentle halation on the lamp and the lightning
+- palette: oiled brass, oat wool, whitewash grey; slate-blue storm shadows
+- light-source: every shot lit by a nameable source -- the great lamp, the storm sky, his hand lantern
+- camera-speed: slow or locked; the weather moves, the camera barely does
+- set-lock: ONE lighthouse, identical in every shot -- the same round lantern room, the same beehive Fresnel lens, the same whitewashed stone and riveted iron
+
+WHAT ELSE IS ALIVE IN THIS SHOT'S FRAME (background only):
+- lantern room / lens: the great Fresnel lens, concentric glass rings, fully intact, one prism carrying a single fine hairline flaw. Quietly in the background: the glass ticks faintly as it cools with the falling temperature. Details: a hairline seam inside the glass, catching
+- lantern room / storm panes: tall storm windows, salt bloom in the corners, old putty repairs. Quietly in the background: the first raindrops hit and crawl sideways in the wind
+- lantern room / floor: riveted iron plates, paint worn to bare metal along the walk-line. Quietly in the background: dust shivers across the plates with each gust
+- gallery outside: iron gallery rail OUTSIDE the glass, grey sea far below -- no birds ever inside the room. Quietly in the background: two gulls land outside on the exterior rail, fold their wings, and press against it to shelter, seen through the glass
+- stairwell: spiral iron stair falling away into shadow, a rope handrail. Quietly in the background: his hand lantern glows below, left burning on a step
+
+THE SHOT TO RENDER — Shot 1 "The Climb" (8 seconds):
+Camera: slow push-in, 35mm, low angle from the stair hatch
+Action: the keeper (exactly as described above) rises into the lantern room through the floor hatch, pauses, and looks first at the dark lamp, then at the storm front through the glass. (setting: the location described above).
+Light: cold storm-sky key through the panes; his hand lantern warms him from below
+Audio: boots on iron, wind rising around the tower, one far roll of thunder, gulls crying
+Style: maritime realism, muted film stock, the faintest sway as if the tower breathes

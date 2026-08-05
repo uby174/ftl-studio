@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Production Pipeline — The Lighthouse Keeper (stills-first)</title>
+<style>
+  body{background:#0b0e14;color:#e8ecf4;font-family:'Segoe UI',system-ui,sans-serif;
+    max-width:880px;margin:0 auto;padding:30px 20px 80px;line-height:1.55}
+  h1{font-size:24px;text-align:center}
+  h1 span{color:#e8b64c}
+  p.lead{color:#8b96ad;font-size:14px;text-align:center;margin:8px 0 4px}
+  .phase{font-family:Consolas,monospace;font-size:12px;letter-spacing:3px;color:#e8b64c;
+    margin:34px 0 4px;border-bottom:1px solid #2a3348;padding-bottom:6px}
+  section{background:#121722;border:1px solid #2a3348;border-radius:12px;
+    padding:16px 18px;margin-top:16px}
+  h2{font-size:15px}
+  h2 small{color:#8b96ad;font-weight:400;margin-left:8px;font-size:12px}
+  .tag{display:inline-block;font-family:Consolas,monospace;font-size:10px;border:1px solid #5fd0c5;
+    color:#5fd0c5;border-radius:12px;padding:1px 10px;margin-left:8px;vertical-align:middle}
+  .tag.motion{border-color:#7ec98f;color:#7ec98f}
+  button{display:block;width:100%;background:#e8b64c;color:#161006;border:none;
+    border-radius:8px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;margin:10px 0 8px}
+  button:hover{filter:brightness(1.1)}
+  button.motion{background:#7ec98f;color:#0b1a10}
+  pre{white-space:pre-wrap;font-family:Consolas,monospace;font-size:12px;color:#aeb9cd;
+    background:#0f1420;border:1px solid #2a3348;border-radius:8px;padding:12px;margin:0}
+  .why{background:#0f1420;border:1px solid #e8b64c;border-radius:12px;padding:16px 18px;margin-top:18px}
+  .why h2{color:#e8b64c}
+  ol{font-size:13px;color:#c6cede;padding-left:20px;line-height:1.9}
+  .note{font-size:12px;color:#8b96ad;margin-top:6px}
+</style>
+</head>
+<body>
+<h1>Production Pipeline · <span>The Lighthouse Keeper</span></h1>
+<p class="lead">Stills-first — how world-class AI film is actually made. Lock every image as a photograph, then only ask the video model to move it.</p>
+
+<div class="why">
+  <h2>Why this works when text-to-video fails</h2>
+  <ol>
+    <li>Text makes the model <b>re-imagine</b> every visual fact on every generation — new face, new lens, new room each time. That's the drift you saw.</li>
+    <li>A still image is <b>cheap to re-roll and easy to judge</b>. You approve the photograph before anything moves.</li>
+    <li>Image-to-video keeps ~95% of the still's identity. The video model does the one thing it's brilliant at: <b>moving an approved image</b>.</li>
+    <li>Motion prompts stay <b>short</b> — the still already carries all the visual truth; text only describes what moves and what it sounds like.</li>
+  </ol>
+</div>
+
+<div class="phase">PHASE A · LOCK THE INGREDIENTS (stills — re-roll until perfect, then never regenerate again)</div>
+
+<section>
+  <h2>A1 · THE KEEPER <span class="tag">STILL → save as Ingredient</span></h2>
+  <button onclick="copyIt(this)">📋 copy still prompt — generate in Flow's image tool / Imagen</button>
+  <pre>Photorealistic cinematic portrait, waist-up, of an old lighthouse keeper in his seventies. A square, deeply lined face; a flattened, once-broken nose; small pale-grey eyes under heavy white brows; short-cropped white beard and stubble; thick white hair combed back; a small scar splitting his left eyebrow. Stocky, slightly stooped. He wears an oat-colored flecked wool sweater under a dark-brown waistcoat with brass buttons. Dim slate-blue storm dusk light from tall windows on the left, warm lantern glow from below right. Shallow depth of field, fine 35mm film grain. He looks slightly past camera, calm and unhurried.</pre>
+  <p class="note">Re-roll until you love this face. This man is now canon — save the image. He appears in every shot.</p>
+</section>
+
+<section>
+  <h2>A2 · THE LANTERN ROOM <span class="tag">STILL → save as Ingredient</span></h2>
+  <button onclick="copyIt(this)">📋 copy still prompt</button>
+  <pre>Photorealistic wide interior photograph of a round lighthouse lantern room at dusk in a storm. At the center: one great beehive-shaped Fresnel lens of concentric glass rings, fully intact, on a cast-iron pedestal — unlit. Riveted iron floor with paint worn to bare metal along the walk-line, whitewashed stone lower walls, tall storm windows with salt bloom in the corners and old putty repairs, first rain streaking the glass. Through the windows: a black storm front over a grey sea, and two seagulls sheltering outside on the exterior gallery rail. An open floor hatch, and a brass hand lantern burning beside it — the only warm light. Dim slate-blue failing light, fine 35mm film grain.</pre>
+  <p class="note">This room is now canon. One lens design, forever.</p>
+</section>
+
+<div class="phase">PHASE B · PER SHOT: first-frame STILL → approve → animate with the MOTION prompt</div>
+
+<section>
+  <h2>SHOT 1 · The Climb <small>8s</small></h2>
+  <p class="note">First-frame still — use Ingredients A1 + A2:</p>
+  <button onclick="copyIt(this)">📋 copy first-frame still prompt</button>
+  <pre>Using the keeper and the lantern room exactly as in the reference images: low-angle photograph from floor level. The keeper is halfway risen through the open floor hatch, one hand on the iron rim, the burning hand lantern on the floor beside the hatch lighting him warmly from below. Behind him the great unlit Fresnel lens and the storm windows, cold slate-blue dusk. Shallow depth of field, fine film grain.</pre>
+  <p class="note">Then animate that approved still (Frames-to-Video):</p>
+  <button class="motion" onclick="copyIt(this)">▶ copy motion prompt</button>
+  <pre>One continuous take, no cuts. He climbs the last steps up through the hatch, straightens slowly, and looks first at the dark lens, then out at the storm front through the glass. The camera pushes in very slowly at low angle. Audio: boots on iron, wind rising around the tower, one far roll of thunder, gulls crying outside the glass.</pre>
+</section>
+
+<section>
+  <h2>SHOT 2 · Three Drops <small>7s</small></h2>
+  <button onclick="copyIt(this)">📋 copy first-frame still prompt</button>
+  <pre>Using the keeper and the lantern room exactly as in the reference images: medium close-up photograph over a small brass-cornered workbench. The keeper stands behind it, sleeves pushed up, an unrolled leather tool roll before him with wick scissors and cotton rags laid out, a long-spouted brass oil can in his right hand, the burning hand lantern at frame left as the warm key light, the unlit Fresnel lens soft in the background. Rain streaks the dark windows behind. Shallow depth of field, fine film grain.</pre>
+  <button class="motion" onclick="copyIt(this)">▶ copy motion prompt</button>
+  <pre>One continuous take, no cuts, camera locked. He threads a new wick, sets it, then tips the oil can and gives the mechanism exactly three slow drops — each drop catching the lantern light as it falls. His hands are sure and unhurried. Audio: leather shifting, one scissor snip, three soft oil sounds, the first rain reaching the glass.</pre>
+</section>
+
+<section>
+  <h2>SHOT 3 · First Light <small>8s</small></h2>
+  <button onclick="copyIt(this)">📋 copy first-frame still prompt</button>
+  <pre>Using the keeper and the lantern room exactly as in the reference images: wide photograph, camera locked. The keeper stands small beside the great unlit Fresnel lens, holding a slender lit taper, its small flame the only warm light on his face. Full dusk storm outside the glass, rain arriving, one far lightning strike out at sea. Shallow depth of field on the keeper and lens, fine film grain.</pre>
+  <button class="motion" onclick="copyIt(this)">▶ copy motion prompt</button>
+  <pre>One continuous take, no cuts, camera locked wide. He reaches in and touches the taper to the wick — the great lens wakes: rings of warm light sweep across the room and out into the rain. He steps back and simply watches it turn. Audio: the taper's soft flare, a low whoomp as the lamp takes, the beam's steady hum, full rain on the panes, a foghorn far below.</pre>
+</section>
+
+<section>
+  <h2>SHOT 4 · Insert — The Seam <small>5s</small></h2>
+  <button onclick="copyIt(this)">📋 copy first-frame still prompt</button>
+  <pre>Macro photograph, extreme close-up, paper-thin focus: the keeper's weathered hand (calloused fingertips, oat wool sweater cuff) holding a small cotton rag against one intact glass prism of the lit Fresnel lens. Inside the solid glass, a single fine hairline seam catches the lamplight — the glass is whole, nothing broken. The lit lamp glows warm behind the glass, filling the frame with soft golden light. Fine film grain.</pre>
+  <button class="motion" onclick="copyIt(this)">▶ copy motion prompt</button>
+  <pre>One continuous take, no cuts, camera locked macro. His thumb slides the rag very slowly along the glass; fine dust lifts off into the beam; the hairline seam inside the solid glass fills with swimming light as the cloth passes over it. Audio: soft cloth on glass, the lamp's steady hum, rain muffled behind the lens.</pre>
+</section>
+
+<div class="phase">PHASE C · ASSEMBLE</div>
+<section>
+  <ol>
+    <li>Generate 2–3 takes per shot from its approved still; keep the best.</li>
+    <li>Cut the four clips together in order in any editor (or Flow's timeline): Climb → Drops → First Light → Seam.</li>
+    <li>If a clip drifts from its still or cuts internally — re-roll the clip, never the still.</li>
+  </ol>
+</section>
+
+<script>
+function copyIt(btn){
+  const txt=btn.nextElementSibling.textContent;
+  navigator.clipboard.writeText(txt).then(()=>{
+    const old=btn.textContent;btn.textContent='✓ COPIED';
+    setTimeout(()=>btn.textContent=old,1600);
+  });
+}
+</script>
+</body>
+</html>

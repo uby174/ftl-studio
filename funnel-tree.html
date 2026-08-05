@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FTPA — Funnel-Tree Prompt Architecture</title>
+<style>
+  :root{
+    --bg:#0b0e14; --panel:#121722; --panel2:#0f1420; --line:#2a3348;
+    --ink:#e8ecf4; --dim:#8b96ad; --gold:#e8b64c; --green:#7ec98f;
+    --blue:#6aa5e8; --red:#e87a6a; --purple:#b18ae8; --teal:#5fd0c5;
+    --mono:'Consolas','SF Mono',monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--ink);font-family:'Segoe UI',system-ui,sans-serif;line-height:1.5;padding-bottom:80px}
+  .wrap{max-width:1100px;margin:0 auto;padding:0 20px}
+
+  header{padding:38px 0 10px;text-align:center}
+  header h1{font-size:26px;letter-spacing:.5px}
+  header h1 span{color:var(--gold)}
+  header p{color:var(--dim);font-size:14px;margin-top:6px}
+
+  .seedbox{margin:22px auto 8px;max-width:640px;background:var(--panel);border:1px solid var(--line);
+    border-radius:12px;padding:14px 20px;text-align:center}
+  .seedbox .lbl{font-size:11px;letter-spacing:2px;color:var(--gold);font-family:var(--mono)}
+  .seedbox .seed{font-size:20px;font-style:italic;margin-top:4px}
+
+  .controls{text-align:center;margin:18px 0 6px}
+  button.step{background:var(--gold);color:#161006;border:none;border-radius:8px;
+    padding:10px 26px;font-size:15px;font-weight:600;cursor:pointer;letter-spacing:.3px}
+  button.step:hover{filter:brightness(1.1)}
+  button.ghost{background:transparent;color:var(--dim);border:1px solid var(--line);border-radius:8px;
+    padding:10px 16px;font-size:13px;cursor:pointer;margin-left:10px}
+  button.ghost:hover{color:var(--ink)}
+
+  /* funnel stages */
+  .stage{opacity:0;max-height:0;overflow:hidden;transition:opacity .7s ease,max-height .8s ease;margin:0 auto}
+  .stage.on{opacity:1;max-height:4000px;margin-top:26px}
+  .stage-tag{display:flex;align-items:center;gap:10px;justify-content:center;margin-bottom:14px}
+  .stage-tag .num{font-family:var(--mono);font-size:11px;color:var(--bg);background:var(--gold);
+    border-radius:20px;padding:2px 10px;font-weight:700}
+  .stage-tag .name{font-size:13px;letter-spacing:3px;color:var(--dim)}
+  .connector{width:2px;height:26px;background:linear-gradient(var(--line),var(--gold));margin:0 auto}
+
+  /* widths create the funnel silhouette */
+  #s0 .inner{max-width:560px}
+  #s1 .inner{max-width:860px}
+  #s2 .inner{max-width:1100px}
+  #s3 .inner{max-width:760px}
+  #s4 .inner{max-width:640px}
+  #s5 .inner{max-width:820px}
+  #s6 .inner{max-width:1000px}
+  #s7 .inner{max-width:860px}
+  .dirrow{display:flex;gap:10px;justify-content:center;margin-bottom:12px}
+  .dirrow select{background:var(--panel2);border:1px solid var(--line);border-radius:8px;
+    color:var(--ink);padding:10px 12px;font-size:13px;font-family:var(--mono)}
+  .dirrow input{flex:1;max-width:460px;background:var(--panel2);border:1px solid var(--line);
+    border-radius:8px;color:var(--ink);padding:10px 14px;font-size:13px}
+  .dirrow input::placeholder{color:var(--dim)}
+  .note{display:flex;align-items:center;gap:10px;background:var(--panel2);border:1px solid var(--line);
+    border-radius:8px;padding:8px 12px;margin-bottom:8px}
+  .note .tgt{font-family:var(--mono);font-size:11px;color:var(--gold);white-space:nowrap}
+  .note .txt{font-size:13px;flex:1}
+  .note .del{background:none;border:none;color:var(--dim);cursor:pointer;font-size:14px}
+  .note .del:hover{color:var(--red)}
+  .presets{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:12px}
+  .preset{font-size:11px;font-family:var(--mono);color:var(--dim);border:1px dashed var(--line);
+    border-radius:14px;padding:4px 12px;cursor:pointer}
+  .preset:hover{color:var(--gold);border-color:var(--gold)}
+  .crumbs{font-family:var(--mono);font-size:13px;color:var(--dim);margin-bottom:12px;text-align:center}
+  .crumbs span{color:var(--teal);cursor:pointer}
+  .crumbs span:hover{text-decoration:underline}
+  .zone-card{border:1px solid var(--line);background:var(--panel);border-radius:10px;
+    padding:12px 14px;cursor:pointer;width:100%;max-width:300px;text-align:left;transition:transform .15s}
+  .zone-card:hover{transform:translateY(-3px)}
+  .zone-card .zn{font-weight:600;font-size:14px}
+  .zone-card .zn .vis{float:right;font-family:var(--mono);font-size:10px;color:var(--teal)}
+  .zone-card .zs{font-size:12px;color:var(--dim);margin-top:4px}
+  .zone-card .zb{font-size:11px;color:var(--gold);margin-top:5px}
+  .zone-card .zb::before{content:"▸ bg action: ";color:var(--dim)}
+  .zone-card.user{border-color:var(--green)}
+  .zone-card.user .zn::after{content:" [USER]";color:var(--green);font-family:var(--mono);font-size:10px}
+  .addrow{display:flex;gap:10px;margin-top:14px;justify-content:center}
+  .addrow input{flex:1;max-width:520px;background:var(--panel2);border:1px solid var(--line);
+    border-radius:8px;color:var(--ink);padding:10px 14px;font-size:13px}
+  .addrow input::placeholder{color:var(--dim)}
+  .inner{margin:0 auto}
+
+  /* stage 1 scatter chips */
+  .chips{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+  .chip{border-radius:10px;padding:10px 16px;cursor:pointer;border:1px solid var(--line);
+    background:var(--panel);min-width:150px;text-align:center;transition:transform .15s}
+  .chip:hover{transform:translateY(-3px)}
+  .chip.active{outline:2px solid var(--gold)}
+  .chip .t{font-size:16px;font-weight:600}
+  .chip .k{font-size:10px;letter-spacing:2px;font-family:var(--mono);margin-top:3px}
+  .c-id .k{color:var(--green)} .c-ar .k{color:var(--blue)} .c-mo .k{color:var(--gold)}
+  .c-wo .k{color:var(--purple)} .c-de .k{color:var(--teal)}
+  .hint{text-align:center;color:var(--dim);font-size:12px;margin-top:10px}
+
+  /* stage 2 expansion panel */
+  .lenses{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:12px}
+  .lens{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+  .lens h4{font-family:var(--mono);font-size:11px;letter-spacing:2px;color:var(--gold);margin-bottom:6px}
+  .lens p{font-size:13px;color:var(--ink)}
+  .expand-head{text-align:center;margin-bottom:12px;font-size:14px;color:var(--dim)}
+  .expand-head b{color:var(--ink)}
+
+  /* stage 3 conflicts */
+  .conflict{display:grid;grid-template-columns:1fr 34px 1fr;gap:10px;align-items:center;
+    background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:10px}
+  .conflict .vs{color:var(--red);font-family:var(--mono);font-size:11px;text-align:center}
+  .conflict .a{font-size:13px;color:var(--dim)}
+  .conflict .r{font-size:13px}
+  .conflict .r b{color:var(--green)}
+  .law{text-align:center;font-family:var(--mono);font-size:12px;color:var(--gold);
+    border:1px dashed var(--line);border-radius:8px;padding:8px;margin-bottom:14px}
+  .frozen{background:var(--panel);border:1px solid var(--gold);border-radius:10px;padding:14px 16px;margin-top:12px}
+  .frozen h4{font-size:11px;letter-spacing:2px;font-family:var(--mono);color:var(--gold);margin-bottom:6px}
+  .frozen h4 .lock{float:right;color:var(--dim)}
+  .frozen p{font-size:13px;font-style:italic;color:var(--ink)}
+
+  /* stage 4 shots */
+  .shot{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-bottom:14px}
+  .shot h3{font-size:15px}
+  .shot h3 .dur{color:var(--dim);font-size:12px;font-weight:400;margin-left:8px}
+  .shot .anchor{font-size:11px;font-family:var(--mono);color:var(--teal);margin:4px 0 8px}
+  .shot pre{white-space:pre-wrap;font-family:var(--mono);font-size:12px;color:#cfd8e8;
+    background:var(--panel2);border-radius:8px;padding:12px;border:1px solid var(--line);margin-top:8px}
+  .copy{float:right;background:transparent;border:1px solid var(--line);color:var(--dim);
+    font-size:11px;border-radius:6px;padding:3px 10px;cursor:pointer}
+  .copy:hover{color:var(--ink)}
+  .bible-ref{color:var(--gold)}
+  .world-ref{color:var(--purple)}
+  .done{text-align:center;color:var(--green);font-size:14px;margin-top:8px;font-family:var(--mono)}
+</style>
+</head>
+<body>
+<header class="wrap">
+  <h1>FTPA · <span>Funnel-Tree Prompt Architecture</span></h1>
+  <p>Diverge → expand → converge → compile. One sentence in, a Veo 3 multi-shot sequence out.</p>
+</header>
+
+<div class="wrap">
+  <div class="seedbox">
+    <div class="lbl">STAGE 0 · SEED</div>
+    <div class="seed">“a howdy cowboy Yoda from Star Wars”</div>
+  </div>
+
+  <div class="controls">
+    <button class="step" id="stepBtn" onclick="nextStage()">Run the funnel ▸</button>
+    <button class="ghost" onclick="reset()">Reset</button>
+  </div>
+
+  <!-- STAGE 1 SCATTER -->
+  <div class="stage" id="s1">
+    <div class="connector"></div>
+    <div class="stage-tag"><span class="num">1</span><span class="name">SCATTER — SEMANTIC NODES</span></div>
+    <div class="inner">
+      <div class="chips">
+        <div class="chip c-id" onclick="pick('yoda',this)"><div class="t">Yoda</div><div class="k">IDENTITY</div></div>
+        <div class="chip c-ar" onclick="pick('cowboy',this)"><div class="t">cowboy</div><div class="k">ARCHETYPE</div></div>
+        <div class="chip c-mo" onclick="pick('howdy',this)"><div class="t">“howdy”</div><div class="k">MODIFIER</div></div>
+        <div class="chip c-wo" onclick="pick('starwars',this)"><div class="t">Star Wars</div><div class="k">WORLD</div></div>
+        <div class="chip c-de" onclick="pick('derived',this)"><div class="t">+ action / setting</div><div class="k">DERIVED</div></div>
+      </div>
+      <div class="hint">The seed never named an action or a setting — the funnel derives them as first-class branches.</div>
+    </div>
+  </div>
+
+  <!-- STAGE 2 EXPAND -->
+  <div class="stage" id="s2">
+    <div class="connector"></div>
+    <div class="stage-tag"><span class="num">2</span><span class="name">EXPAND — SIX LENSES PER NODE (WIDEST POINT)</span></div>
+    <div class="inner">
+      <div class="expand-head" id="expandHead">Click any node above to interrogate it — <b>FORM · MATERIAL · MOTION · LIGHT · SOUND · PHYSICS</b></div>
+      <div class="lenses" id="lensGrid"></div>
+    </div>
+  </div>
+
+  <!-- STAGE 3 CONVERGE -->
+  <div class="stage" id="s3">
+    <div class="connector"></div>
+    <div class="stage-tag"><span class="num">3</span><span class="name">CONVERGE — MERGE &amp; KILL CONFLICTS</span></div>
+    <div class="inner">
+      <div class="law">PRECEDENCE LAW: IDENTITY &gt; ARCHETYPE &gt; MODIFIER &gt; WORLD &gt; DERIVED</div>
+      <div class="conflict"><div class="a">Cowboy = human proportions, tall silhouette</div><div class="vs">VS</div>
+        <div class="r"><b>Yoda wins</b> → wardrobe tailored down: child-scale duster, hat brim notched for the ears</div></div>
+      <div class="conflict"><div class="a">Cowboy = leather boots</div><div class="vs">VS</div>
+        <div class="r"><b>Yoda wins</b> → open-toed leather wraps over three-toed clawed feet</div></div>
+      <div class="conflict"><div class="a">Western dust plains, 1870s Earth</div><div class="vs">VS</div>
+        <div class="r"><b>World adapts</b> → frontier town on a Tatooine-like world, twin suns, vaporators as windmills</div></div>
+      <div class="conflict"><div class="a">“Howdy” = quick friendly wave</div><div class="vs">VS</div>
+        <div class="r"><b>Yoda wins</b> → slow two-finger hat-brim tip, gravelly drawl: “Howdy, hmm.”</div></div>
+
+      <div class="frozen"><h4>CHARACTER BIBLE ¶ <span class="lock">🔒 FROZEN — pasted verbatim into every shot</span></h4>
+        <p id="bibleText">Yoda, the small elderly green-skinned alien Jedi Master, 66 cm tall, with large pointed drooping ears, wispy white hair, deep wrinkles, and heavy-lidded knowing eyes, dressed as a frontier cowboy: a child-scale weathered brown leather duster over cream Jedi under-robes, a sun-bleached tan cowboy hat with the brim notched around his ears, a hand-tooled gun-belt holstering his lightsaber like a six-shooter, and open-toed leather boot-wraps over three-toed feet. He moves slowly and deliberately, with the weight of 900 years, cane in left hand.</p></div>
+      <div class="frozen"><h4>WORLD ¶ <span class="lock">🔒 FROZEN</span></h4>
+        <p id="worldText">A sun-scorched frontier main street on a Tatooine-like desert world: sand-drifted wooden boardwalks, a saloon with swinging doors, moisture vaporators turning like windmills, twin suns hanging low, heat-haze shimmering, fine dust rolling in the wind. Star Wars universe, lived-in used-future western.</p></div>
+    </div>
+  </div>
+
+  <!-- STAGE 4 COMPILE -->
+  <div class="stage" id="s4">
+    <div class="connector"></div>
+    <div class="stage-tag"><span class="num">4</span><span class="name">COMPILE — VEO 3 MULTI-SHOT SEQUENCE</span></div>
+    <div class="controls" style="margin:0 0 14px">
+      <button class="ghost" id="asmBtn" onclick="toggleAsm()">show final assembled prompts ▸</button>
+    </div>
+    <div class="inner" id="shots"></div>
+    <div class="done">✓ funnel complete — 3 shots, zero contradictions, continuity locked</div>
+  </div>
+
+  <!-- STAGE 5 LANGUAGE -->
+  <div class="stage" id="s5">
+    <div class="connector"></div>
+    <div class="stage-tag"><span class="num">5</span><span class="name">LANGUAGE — FTL-1 · THE FUNNEL AS CODE</span></div>
+    <div class="inner">
+      <div class="expand-head">The whole architecture compressed into a language. Paste <b>KEY + PROGRAM</b> as one prompt — the KEY teaches the model to read FTL, the PROGRAM runs the funnel.</div>
+
+      <div class="shot"><button class="copy" onclick="copyText(FTL_KEY,this)">copy key</button>
+        <h3>The Model Key <span class="dur">decoder — always pasted first</span></h3>
+        <pre id="ftlKey"></pre></div>
+
+      <div class="shot"><button class="copy" onclick="copyText(FTL_PROGRAM,this)">copy program</button>
+        <h3>The FTL Program <span class="dur">the Yoda funnel, in language form</span></h3>
+        <pre id="ftlProg"></pre></div>
+
+      <div class="frozen"><h4>RUN IT <span class="lock">one generation = KEY + PROGRAM + RENDER line</span></h4>
+        <div class="controls" style="margin:8px 0 2px">
+          <button class="step" onclick="copyRun(1,this)">copy full run · SHOT 1</button>
+          <button class="step" onclick="copyRun(2,this)">copy full run · SHOT 2</button>
+          <button class="step" onclick="copyRun(3,this)">copy full run · SHOT 3</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STAGE 6 FRACTAL -->
+  <div class="stage" id="s6">
+    <div class="connector"></div>
+    <div class="stage-tag"><span class="num">6</span><span class="name">FRACTAL — GO INSIDE THE SCENE</span></div>
+    <div class="inner">
+      <div class="expand-head">Every region of the frame is its own funnel with its own look and its own quiet background action. <b>Click a zone to go inside it. Add anything, anywhere</b> — the film prompt recompiles live below.</div>
+      <div class="crumbs" id="crumbs"></div>
+      <div class="chips" id="zoneGrid"></div>
+      <div class="addrow">
+        <input id="addInp" placeholder='add an element here… e.g. "a framed photo of Captain America"'
+          onkeydown="if(event.key==='Enter')addElement()">
+        <button class="step" onclick="addElement()">⊕ add here</button>
+      </div>
+      <div class="shot" style="margin-top:18px"><button class="copy" onclick="copyText(compileZones(),this)">copy zones</button>
+        <h3>Compiled ZONE block <span class="dur">only what the camera sees, detail scaled by depth</span></h3>
+        <pre id="zoneOut"></pre></div>
+      <div class="frozen"><h4>RUN THE COMPLETE FILM PROMPT <span class="lock">KEY + ADDENDUM + PROGRAM + ZONES + RENDER</span></h4>
+        <div class="controls" style="margin:8px 0 2px">
+          <button class="step" onclick="copyFractalRun(1,this)">fractal run · SHOT 1</button>
+          <button class="step" onclick="copyFractalRun(2,this)">fractal run · SHOT 2</button>
+          <button class="step" onclick="copyFractalRun(3,this)">fractal run · SHOT 3</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STAGE 7 DIRECT -->
+  <div class="stage" id="s7">
+    <div class="connector"></div>
+    <div class="stage-tag"><span class="num">7</span><span class="name">DIRECT — THE DIRECTOR'S CONSOLE (VIBE-DIRECTING)</span></div>
+    <div class="inner">
+      <div class="expand-head">You are the director now. Pick a target, say the note the way you'd say it on set — <b>it patches over everything at the highest priority</b> without touching who the character is or where we are.</div>
+      <div class="presets">
+        <span class="preset" onclick="presetNote('SHOT 2','warmer, more amber light on his face during the greeting')">warmer greeting</span>
+        <span class="preset" onclick="presetNote('yoda','even slower hat tip — hold the smile one beat longer')">slower hat tip</span>
+        <span class="preset" onclick="presetNote('FILM','more dust in every light shaft, heavier desert atmosphere')">more dust</span>
+        <span class="preset" onclick="presetNote('SHOT 1','camera 20cm lower — we look up at the tiny legend')">camera lower</span>
+        <span class="preset" onclick="presetNote('saloon/right-wall','the gamblers freeze mid-argument when he enters')">gamblers freeze</span>
+      </div>
+      <div class="dirrow">
+        <select id="dirTarget">
+          <option value="FILM">FILM (whole)</option>
+          <option value="SHOT 1">SHOT 1</option>
+          <option value="SHOT 2">SHOT 2</option>
+          <option value="SHOT 3">SHOT 3</option>
+          <option value="yoda">yoda</option>
+          <option value="starwars">world</option>
+          <option value="saloon/right-wall">right wall</option>
+          <option value="saloon/bar">bar</option>
+          <option value="saloon/back-stairs">back stairs</option>
+        </select>
+        <input id="dirInp" placeholder='say it like a director… e.g. "hold the silence two beats before he speaks"'
+          onkeydown="if(event.key==='Enter')addDirective()">
+        <button class="step" onclick="addDirective()">🎬 direct</button>
+      </div>
+      <div id="noteList"></div>
+      <div class="shot" style="margin-top:14px"><button class="copy" onclick="copyText(compileDirect(),this)">copy directives</button>
+        <h3>Compiled DIRECT block <span class="dur">the director's voice, in language form</span></h3>
+        <pre id="dirOut"></pre></div>
+      <div class="frozen"><h4>FINAL CUT <span class="lock">KEY + ADDENDA + PROGRAM + ZONES + DIRECT + RENDER</span></h4>
+        <div class="controls" style="margin:8px 0 2px">
+          <button class="step" onclick="copyFinalRun(1,this)">final cut · SHOT 1</button>
+          <button class="step" onclick="copyFinalRun(2,this)">final cut · SHOT 2</button>
+          <button class="step" onclick="copyFinalRun(3,this)">final cut · SHOT 3</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const EXPANSIONS = {
+  yoda:{title:"Yoda — IDENTITY",lenses:{
+    FORM:"66 cm tall; oversized head; large pointed drooping ears; hunched posture; three-fingered hands, three-toed feet; walks with a cane.",
+    MATERIAL:"Wrinkled matte green skin with subtle subsurface scatter; wispy white hair; aged, papery texture around the eyes.",
+    MOTION:"Slow, deliberate, economical; 900 years of weight in every gesture; sudden uncanny speed only when the Force is used.",
+    LIGHT:"Skin reads warm-olive in golden light; ears translucent when backlit — rim-light the ears in every backlit shot.",
+    SOUND:"Gravelly, breathy voice; inverted syntax; soft 'hmm' punctuation; cane taps on wood.",
+    PHYSICS:"Light body — dust barely stirs at his steps; robe hems drag; the Force moves objects with a low hum."}},
+  cowboy:{title:"cowboy — ARCHETYPE",lenses:{
+    FORM:"Duster coat silhouette, wide-brim hat, gun-belt slung low, spurs; adapted to child scale for the identity.",
+    MATERIAL:"Weathered brown leather, sun-bleached felt hat, hand-tooled belt, trail dust in every crease.",
+    MOTION:"Saloon-door push, hat tip, slow draw, unhurried amble down a boardwalk.",
+    LIGHT:"Golden-hour hard key, long shadows down the street, silhouette-in-doorway grammar.",
+    SOUND:"Spur jingle, leather creak, boardwalk knock, distant saloon piano.",
+    PHYSICS:"Duster sways with steps; hat brim flexes in wind; dust kicks at heel strikes."}},
+  howdy:{title:"“howdy” — MODIFIER",lenses:{
+    FORM:"Open, front-facing posture; chin lifted to see under the hat brim.",
+    MATERIAL:"—(mood node: no material of its own; it colours the others)",
+    MOTION:"The signature beat: two clawed fingers rise to the notched brim, slow tip, faint smile creasing the wrinkles.",
+    LIGHT:"Warm, welcoming key on the face at the moment of greeting.",
+    SOUND:"Drawled line, Yoda-syntax: “Howdy, hmm… partners, you are.” Room falls quiet around it.",
+    PHYSICS:"Gesture is slow enough that the sleeve slides down the wrist — small cloth-sim detail sells realism."}},
+  starwars:{title:"Star Wars — WORLD",lenses:{
+    FORM:"Used-future frontier: vaporators, landspeeder hitched like a horse, droid sweeping the boardwalk.",
+    MATERIAL:"Sand-pitted metal, bleached wood, oil-stained tech; nothing new, everything repaired.",
+    MOTION:"Twin-sun heat shimmer; slow banthas or dewbacks crossing the far street.",
+    LIGHT:"Twin suns = double shadows (signature tell); warm tungsten interiors vs hard white exteriors.",
+    SOUND:"Wind, vaporator hum, distant dewback lowing, blaster-safe silence; the Force hum when used.",
+    PHYSICS:"Fine dust everywhere; low-gravity-familiar physics — objects float only when the Force acts."}},
+  derived:{title:"derived ACTION + SETTING",lenses:{
+    FORM:"SETTING: saloon on a frontier main street — interior + doorway give two lighting worlds in one location.",
+    MATERIAL:"Bleached wood bar, brass rail, dusty glass mugs, swinging doors with peeling paint.",
+    MOTION:"ACTION arc across shots: enter → greet → Force-draw a mug. Small, filmable, character-revealing beats.",
+    LIGHT:"Doorway = hard white blade of light into a warm dark room; volumetric dust in the shaft.",
+    SOUND:"Piano stops when the doors creak — the oldest western beat, kept because it stages the greeting.",
+    PHYSICS:"Mug slides then floats: contrast of ordinary friction vs Force levitation is the money shot."}}
+};
+
+const BIBLE="[CHARACTER BIBLE ¶ — verbatim]";
+const WORLD="[WORLD ¶ — verbatim]";
+const SHOTS=[
+ {n:1,t:"The Entrance",d:"8 s",a:"establishes: doorway light",
+  p:`Slow dolly-in, 35 mm anamorphic, low angle. ${BIBLE} He pushes through the saloon's swinging doors and pauses in the doorway, silhouetted, then steps into the light. ${WORLD} Camera dollies in from street level toward the doors. Golden-hour twin-sun backlight, long double shadows, volumetric dust in the light shafts. Audio: creak of the swinging doors, jingle of his belt, wind, distant dewback lowing; the saloon piano stops mid-note. Gritty spaghetti-western film grain, Kodak 2383 warmth, Star Wars production design.`},
+ {n:2,t:"The Howdy",d:"6 s",a:"anchor ← doorway light (Shot 1)",
+  p:`Medium close-up, 50 mm, eye-level with the tiny Jedi. ${BIBLE} He looks up from under the hat brim, raises two clawed green fingers to the notched brim, tips it slowly, and drawls in his gravelly inverted syntax: "Howdy, hmm… partners, you are." A faint smile creases the wrinkles. ${WORLD} — trimmed: saloon interior, dusty light shafts. Camera locked off, shallow depth of field. Key light from the doorway behind. Audio: his gravelly voice, leather creak of the hat, hushed saloon murmur dying out. Same film stock.`},
+ {n:3,t:"The Force Draw",d:"7 s",a:"anchor ← gun-belt (Shot 2)",
+  p:`Wide shot, 24 mm, dust at boot level. ${BIBLE} A mug slides down the bar; without looking he raises his right hand and the mug floats gently through the air into his grip — the lightsaber-holster glinting. He sips. ${WORLD} — trimmed. Slow lateral tracking shot right. Warm interior tungsten vs hard white doorway light. Audio: low Force hum, wooden slide of the mug, one piano note resuming, wind outside. Same film stock.`},
+ {n:4,t:"Insert — The Brim",d:"5 s",a:"anchor ← hat (Shot 2)",
+  p:`Macro insert, 100 mm, extreme close-up, razor-thin focus, camera locked off. ${BIBLE} Two wrinkled green three-knuckled fingers — every crease and old scar sharp — slide slowly along the sun-bleached felt brim of the notched cowboy hat; fine dust lifts off the fibers into the light as the brim dips a few millimeters. Hard doorway backlight rims the fingers, the felt fibers glowing at the edge; shallow depth of field, one sharp subject plane, creamy falloff. Audio: soft felt rasp under the fingertips, one slow breath, room silence underneath. Same film stock.`}
+];
+
+const FTL_KEY=`=== FTL-1 KEY (how to read the program below) ===
+You are reading FTL-1, the Funnel-Tree Language: a compressed program
+describing one video. Decode it with these rules:
+1. SEED:: is the concept in plain words.
+2. LAW:: sets authority between element types:
+   ID(identity) > AR(archetype) > MO(mood) > WO(world) > DE(scene).
+   If two elements ever disagree, obey the higher one and adapt the lower.
+3. NODE blocks each describe one element. Their six keys mean:
+   form=shape/anatomy  mat=surface/texture  mot=how it moves
+   lit=how light behaves on it  snd=the sound it makes  phy=physics acting on it.
+4. RESOLVE:: lines (A (x) B -> C) are pre-decided conflicts: always apply C.
+5. FREEZE blocks are canon. $BIBLE = the character exactly as written,
+   $WORLD = the location exactly as written. Expand them in full wherever
+   referenced. Never reinterpret, restyle, or abbreviate them.
+6. SHOT blocks are renderable clips:
+   cam()=camera+lens  act{}=action  lit()=lighting  aud{}=all audio
+   anc()=continuity element carried from the previous shot  sty{}=film style.
+7. Render ONLY the shot named on the RENDER:: line, as ONE SINGLE UNBROKEN
+   TAKE: no internal cuts, no scene changes, no time skips, no montage.
+   Everything not in that shot is context.
+=== END KEY ===`;
+
+const FTL_PROGRAM=`@FTL-1
+SEED:: "a howdy cowboy Yoda from Star Wars"
+LAW::  ID > AR > MO > WO > DE
+
+NODE yoda [ID]
+  form: 66cm elderly alien; oversized head; large pointed drooping ears;
+        wispy white hair; deep wrinkles; heavy-lidded knowing eyes;
+        three-fingered hands; three-toed feet; cane in left hand
+  mat:  matte green wrinkled skin, subtle subsurface glow; papery around eyes
+  mot:  slow, deliberate, weight of 900 years; uncanny speed only via the Force
+  lit:  ears translucent when backlit -- always rim-light them
+  snd:  gravelly breathy voice, inverted syntax, soft "hmm"
+  phy:  light body -- dust barely stirs at his steps; robe hems drag
+
+NODE cowboy [AR]
+  form: duster coat, wide-brim hat, gun-belt slung low -- all child-scale
+  mat:  weathered brown leather; sun-bleached tan felt; trail dust in creases
+  mot:  saloon-door push, hat tip, unhurried amble
+  snd:  belt jingle, leather creak, boardwalk knock
+  phy:  duster sways with steps; brim flexes in wind; dust kicks at heels
+
+NODE howdy [MO]
+  mot:  two clawed fingers rise to the brim, slow tip, faint smile
+  snd:  drawled "Howdy, hmm... partners, you are." -- the room falls quiet
+  lit:  warm welcoming key on the face at the moment of greeting
+
+NODE starwars [WO]
+  form: used-future frontier: moisture vaporators, droid sweeping a boardwalk
+  lit:  twin suns = double shadows; warm tungsten interiors vs hard white exteriors
+  snd:  wind, vaporator hum; a low mystical hum when the Force is used
+  phy:  fine dust everywhere; objects float only when the Force acts
+
+NODE scene [DE]
+  form: saloon on a frontier main street; doorway = hard light blade into dark room
+  mot:  arc across shots: enter -> greet -> force-draw a mug
+
+RESOLVE:: human cowboy scale (x) yoda.form -> tailor wardrobe child-scale, notch hat brim for the ears
+RESOLVE:: leather boots (x) three-toed feet -> open-toed leather boot-wraps
+RESOLVE:: 1870s Earth west (x) starwars -> Tatooine-like frontier town, twin suns
+RESOLVE:: quick friendly wave (x) yoda.mot -> slow two-finger brim tip
+
+FREEZE $BIBLE { Yoda, the small elderly green-skinned alien Jedi Master, 66 cm tall,
+  with large pointed drooping ears, wispy white hair, deep wrinkles, and heavy-lidded
+  knowing eyes, dressed as a frontier cowboy: a child-scale weathered brown leather
+  duster over cream Jedi under-robes, a sun-bleached tan cowboy hat with the brim
+  notched around his ears, a hand-tooled gun-belt holstering his lightsaber like a
+  six-shooter, and open-toed leather boot-wraps over three-toed feet. He moves slowly
+  and deliberately, with the weight of 900 years, cane in left hand. }
+
+FREEZE $WORLD { A sun-scorched frontier main street on a Tatooine-like desert world:
+  sand-drifted wooden boardwalks, a saloon with swinging doors, moisture vaporators
+  turning like windmills, twin suns hanging low, heat-haze shimmering, fine dust
+  rolling in the wind. Lived-in used-future western. }
+
+LOOK {
+  dof: shallow, f1.8-2.8, one sharp subject plane, creamy falloff
+  grain: fine 35mm, gentle halation on bright highlights
+  palette: sun-bleached amber, dust-tan, worn leather brown; deep teal shadows
+  light-source: every shot lit by a nameable source -- twin suns, doorway blade, oil lamps
+  camera-speed: slow or locked; the world moves, the camera barely does
+}
+
+SHOT 1 "Entrance" [8s]
+  cam(slow dolly-in, 35mm anamorphic, low angle)
+  act{ $BIBLE pushes through the saloon's swinging doors, pauses silhouetted
+       in the doorway, then steps into the light. $WORLD }
+  lit(golden-hour twin-sun backlight, long double shadows, volumetric dust)
+  aud{ door creak, belt jingle, wind; the saloon piano stops mid-note }
+  sty{ gritty spaghetti-western grain, Kodak 2383 warmth }
+
+SHOT 2 "Howdy" [6s]  anc(doorway light <- SHOT 1)
+  cam(medium close-up, 50mm, eye-level with the tiny figure)
+  act{ $BIBLE looks up from under the brim, tips it slowly with two clawed
+       fingers and drawls: "Howdy, hmm... partners, you are." Faint smile.
+       $WORLD :saloon-interior }
+  lit(key light from the doorway behind, shallow depth of field)
+  aud{ his gravelly line, hat leather creak, murmur dying out }
+  sty{ same stock }
+
+SHOT 3 "Force Draw" [7s]  anc(gun-belt <- SHOT 2)
+  cam(wide, 24mm, dust at boot level, slow lateral track right)
+  act{ a mug slides down the bar; without looking $BIBLE raises his right
+       hand -- the mug floats gently into his grip; he sips.
+       $WORLD :saloon-interior }
+  lit(warm tungsten interior vs hard white doorway light)
+  aud{ low mystical hum, wooden slide of the mug, one piano note resumes }
+  sty{ same stock }
+
+SHOT 4 "Insert -- The Brim" [5s]  anc(hat <- SHOT 2)
+  cam(macro insert, 100mm, extreme close-up, razor-thin focus, locked off)
+  act{ two wrinkled green three-knuckled fingers, every crease and old scar
+       sharp, slide slowly along the sun-bleached felt brim of the notched
+       cowboy hat -- fine dust lifts off the fibers into the light as the
+       brim dips a few millimeters }
+  lit(hard doorway backlight rims the fingers; the felt fibers glow at the edge)
+  aud{ soft felt rasp under the fingertips, one slow breath, room silence }
+  sty{ same stock }`;
+
+const FTL_ZONE_KEY=`=== FTL-1F ADDENDUM (fractal zones) ===
+8. ZONE:: blocks dress the set fractally. The path (saloon/right-wall/poster)
+   addresses a region of the frame, then objects inside it -- a deeper path
+   means a physically smaller detail. Keys:
+   set{}=appearance  bg{}=a quiet secondary action always alive in that zone
+   vis(1,3)=the shots where the zone is on camera  [USER]=a deliberate,
+   must-include insertion: render it clearly and faithfully.
+9. Zones are LIVING BACKGROUND. Render every visible zone fully, but they
+   must never steal focus, light priority, or sound priority from the SHOT
+   action. Background actions continue across shots for continuity.
+=== END ADDENDUM ===`;
+
+const SCENE_TREE={
+ "doorway":{vis:[1,2,3],set:"swinging double doors, paint peeling, a hard white blade of twin-sun light cutting into the dark room",bg:"dust drifts slowly through the light shaft",children:{}},
+ "bar":{vis:[1,3],set:"long bleached-wood bar with a brass foot rail, shelves of mismatched unlabeled bottles",bg:"a battered silver droid bartender polishes a glass with a rag, servos whirring softly",children:{
+   "mug":{set:"a dusty glass mug — the one that slides and floats in SHOT 3"},
+   "bottles":{set:"one bottle glows a faint blue among the rest"}}},
+ "right-wall":{vis:[1,3],set:"rough plank wall warmed by an oil lamp, a corner card table beneath it",bg:"two weathered alien gamblers play a tense card hand, chips clicking, low grumbling argument",children:{
+   "card-table":{set:"round table, scattered angular metal chips, cards with faint glowing pips"},
+   "wanted-poster":{set:"a sun-faded wanted poster, one corner curling off the plank"},
+   "oil-lamp":{set:"brass oil lamp, warm flicker, soot mark on the wood above it"}}},
+ "left-wall":{vis:[2,3],set:"a long cloudy mirror behind the bar shelves, a mounted horned beast skull",bg:"the mirror dimly reflects the doorway light and the tiny silhouette entering",children:{
+   "skull":{set:"bleached horned skull, one horn chipped"}}},
+ "ceiling":{vis:[2],set:"low dark beams, a slow wooden ceiling fan",bg:"the fan turns lazily, dust motes circling in its wash",children:{}},
+ "floor":{vis:[1,3],set:"scuffed sand-dusted boards, a dented brass spittoon by the bar",bg:"a small dozing reptilian hound twitches an ear when the doors creak",children:{}},
+ "back-stairs":{vis:[1],set:"a narrow staircase rising to a landing in shadow",bg:"a cloaked figure on the landing turns to watch, face hidden",children:{}}
+};
+
+const FTL_QUALITY_KEY=`=== FTL-1Q ADDENDUM (cinema-grade quality laws) ===
+13. LOOK { } is a frozen craft block -- the film's photographic DNA. Its keys
+    (dof, grain, palette, light-source, camera-speed) apply to EVERY shot,
+    on top of that shot's sty{}.
+14. QUALITY LAWS -- obey in every shot:
+    - ONE small, precise physical action per shot; hands, faces, and props
+      do the acting. Small exact motion renders masterfully; big motion breaks.
+    - Every lit() names the physical light source inside the scene (window,
+      doorway, lamp, fire, suns). Never unmotivated light.
+    - Shallow depth of field by default: one sharp subject plane, creamy
+      falloff. Deep focus only when a shot explicitly asks.
+    - The camera moves slowly or not at all; the subject supplies the motion.
+    - Every surface carries age: wear, dust, patina, scratches, skin texture.
+15. Every sequence contains at least one INSERT shot -- an extreme close-up
+    of hands, a prop, or a material detail on a macro lens. It is the film's
+    most tactile moment.
+=== END ADDENDUM ===`;
+
+const FTL_WORLD_KEY=`=== FTL-1W ADDENDUM (world-model causality laws) ===
+16. TRACES -- characters mark the world. $BIBLE may carry a trc{} line: the
+    marks the subject's presence leaves behind (boot prints in dust, rag arcs
+    on glass, a shine worn into a gripped rail). Render them: movement always
+    leaves evidence.
+17. REACTIVE WORLD -- surfaces and air respond to contact and weather: dust
+    stirs at steps, cloth drags, floors sound underfoot, flames answer drafts.
+    Nothing is a painted backdrop.
+18. SPLIT DELIVERY -- $BIBLE and $WORLD are self-contained deliverables. In a
+    tool with separate character and environment inputs (world models,
+    ingredient slots), feed each to its own slot verbatim; center the
+    character in any reference image.
+19. VOICE -- compiled prose uses short, declarative, action-oriented
+    sentences. They render better than dense clause chains.
+=== END ADDENDUM ===`;
+
+const FTL_DIRECT_KEY=`=== FTL-1D ADDENDUM (director mode) ===
+10. DIRECT:: lines are the director's live voice on set -- the final creative
+    authority over DELIVERY. Each targets a path (FILM, SHOT 2, yoda,
+    saloon/right-wall) and adjusts pacing, light temperature, intensity,
+    camera feel, emphasis, or sound balance. Apply them over everything else.
+11. A directive may bend HOW something is delivered; it may never change WHO
+    ($BIBLE), WHERE ($WORLD), or undo a RESOLVE. If a directive conflicts
+    with canon, keep canon and honor the directive's intent as closely as
+    possible.
+12. Later directives override earlier ones on the same target.
+=== END ADDENDUM ===`;
+
+const DIRECTIVES=[];
+function addDirective(){
+  const inp=document.getElementById("dirInp");
+  const txt=inp.value.trim();if(!txt)return;
+  DIRECTIVES.push({tgt:document.getElementById("dirTarget").value,txt});
+  inp.value="";renderDirectives();
+}
+function presetNote(tgt,txt){DIRECTIVES.push({tgt,txt});renderDirectives();}
+function delDirective(i){DIRECTIVES.splice(i,1);renderDirectives();}
+function renderDirectives(){
+  document.getElementById("noteList").innerHTML=DIRECTIVES.map((d,i)=>
+    `<div class="note"><span class="tgt">${d.tgt}</span><span class="txt">${d.txt}</span>
+     <button class="del" onclick="delDirective(${i})">✕</button></div>`).join("")||
+    '<div class="hint">no notes yet — the film runs as scripted until you speak</div>';
+  document.getElementById("dirOut").textContent=compileDirect();
+}
+function compileDirect(){
+  if(!DIRECTIVES.length)return "(no directives — film runs as scripted)";
+  return "=== DIRECT (director's notes — highest delivery priority) ===\n"+
+    DIRECTIVES.map(d=>`DIRECT:: ${d.tgt} <- "${d.txt}"`).join("\n")+
+    "\n=== END DIRECT ===";
+}
+function copyFinalRun(n,btn){
+  const dir=DIRECTIVES.length?`\n\n${compileDirect()}`:"";
+  copyText(`${FTL_KEY}\n\n${FTL_ZONE_KEY}\n\n${FTL_QUALITY_KEY}\n\n${FTL_WORLD_KEY}\n\n${FTL_DIRECT_KEY}\n\n${FTL_PROGRAM}\n\n${compileZones()}${dir}\n\nRENDER:: SHOT ${n}`,btn);
+}
+
+let zpath=[];
+function znode(path){let n={children:SCENE_TREE};for(const p of path)n=n.children[p];return n;}
+function renderZones(){
+  const crumbs=['<span onclick="zgo(-1)">saloon</span>']
+    .concat(zpath.map((p,i)=>`<span onclick="zgo(${i})">${p}</span>`));
+  document.getElementById("crumbs").innerHTML=crumbs.join(" / ")+
+    (zpath.length?"":" &nbsp;·&nbsp; you are at the top of the set");
+  const cur=znode(zpath);
+  const kids=cur.children||{};
+  document.getElementById("zoneGrid").innerHTML=Object.entries(kids).map(([k,v])=>{
+    const vis=v.vis?`<span class="vis">vis(${v.vis.join(",")})</span>`:"";
+    const bg=v.bg?`<div class="zb">${v.bg}</div>`:"";
+    return `<div class="zone-card${v.user?" user":""}" onclick="zin('${k}')">
+      <div class="zn">${k} ${vis}</div><div class="zs">${v.set}</div>${bg}</div>`;
+  }).join("")||'<div class="hint">nothing inside yet — add the first element below</div>';
+  document.getElementById("zoneOut").textContent=compileZones();
+}
+function zin(k){const n=znode(zpath).children[k];if(!n.children)n.children={};zpath.push(k);renderZones();}
+function zgo(i){zpath=zpath.slice(0,i+1);renderZones();}
+function addElement(){
+  const inp=document.getElementById("addInp");
+  const txt=inp.value.trim();if(!txt)return;
+  const slug=txt.toLowerCase().replace(/[^a-z0-9 ]/g,"").split(" ").slice(0,3).join("-")||"element";
+  const cur=znode(zpath);if(!cur.children)cur.children={};
+  cur.children[slug]={set:txt,user:true,children:{},...(zpath.length===0?{vis:[1,2,3]}:{})};
+  inp.value="";renderZones();
+}
+function compileZones(){
+  let out="=== ZONES (fractal set-dressing — living background) ===";
+  for(const[name,z]of Object.entries(SCENE_TREE)){
+    out+=`\nZONE:: saloon/${name}  vis(${(z.vis||[1,2,3]).join(",")})${z.user?"  [USER]":""}`;
+    out+=`\n  set{ ${z.set} }`;
+    if(z.bg)out+=`\n  bg{ ${z.bg} }`;
+    const walk=(node,prefix)=>{
+      for(const[ck,cv]of Object.entries(node.children||{})){
+        out+=`\n  + saloon/${prefix}/${ck}${cv.user?" [USER]":""}: ${cv.set}`;
+        walk(cv,`${prefix}/${ck}`);
+      }};
+    walk(z,name);
+  }
+  return out+"\n=== END ZONES ===";
+}
+function copyFractalRun(n,btn){
+  copyText(`${FTL_KEY}\n\n${FTL_ZONE_KEY}\n\n${FTL_QUALITY_KEY}\n\n${FTL_WORLD_KEY}\n\n${FTL_PROGRAM}\n\n${compileZones()}\n\nRENDER:: SHOT ${n}`,btn);
+}
+
+let stage=0;
+const order=["s1","s2","s3","s4","s5","s6","s7"];
+const labels=["Scatter the seed ▸","Expand the nodes ▸","Converge & resolve ▸","Compile the shots ▸","Reveal the language ▸","Go inside the scene ▸","Take the director's chair ▸"];
+
+function nextStage(){
+  if(stage>=order.length)return;
+  document.getElementById(order[stage]).classList.add("on");
+  if(order[stage]==="s2")pick("yoda",document.querySelector(".c-id"));
+  if(order[stage]==="s4")renderShots();
+  if(order[stage]==="s5"){
+    document.getElementById("ftlKey").textContent=FTL_KEY;
+    document.getElementById("ftlProg").textContent=FTL_PROGRAM;
+  }
+  if(order[stage]==="s6")renderZones();
+  if(order[stage]==="s7")renderDirectives();
+  stage++;
+  const btn=document.getElementById("stepBtn");
+  btn.textContent=stage<order.length?labels[stage]:"Funnel complete ✓";
+  if(stage>=order.length){btn.style.background="var(--green)";}
+  document.getElementById(order[stage-1]).scrollIntoView({behavior:"smooth",block:"start"});
+}
+function reset(){
+  stage=0;
+  order.forEach(id=>document.getElementById(id).classList.remove("on"));
+  const btn=document.getElementById("stepBtn");
+  btn.textContent="Run the funnel ▸";btn.style.background="var(--gold)";
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+function pick(key,el){
+  document.querySelectorAll(".chip").forEach(c=>c.classList.remove("active"));
+  if(el)el.classList.add("active");
+  const e=EXPANSIONS[key];
+  document.getElementById("expandHead").innerHTML=`Interrogating <b>${e.title}</b> through the six lenses:`;
+  document.getElementById("lensGrid").innerHTML=Object.entries(e.lenses)
+    .map(([k,v])=>`<div class="lens"><h4>${k}</h4><p>${v}</p></div>`).join("");
+}
+let assembled=false;
+function assembleShot(s){
+  return s.p
+    .replaceAll(BIBLE,document.getElementById("bibleText").textContent)
+    .replaceAll(WORLD,document.getElementById("worldText").textContent);
+}
+function toggleAsm(){
+  assembled=!assembled;
+  document.getElementById("asmBtn").textContent=assembled
+    ?"show funnel structure ▸":"show final assembled prompts ▸";
+  renderShots();
+}
+function renderShots(){
+  document.getElementById("shots").innerHTML=SHOTS.map(s=>{
+    const html=assembled
+      ?assembleShot(s)
+      :s.p.replaceAll(BIBLE,`<span class="bible-ref">${BIBLE}</span>`)
+          .replaceAll(WORLD,`<span class="world-ref">${WORLD}</span>`);
+    return `<div class="shot"><button class="copy" onclick="copyShot(${s.n},this)">copy full prompt</button>
+      <h3>Shot ${s.n} · ${s.t}<span class="dur">${s.d}</span></h3>
+      <div class="anchor">continuity ${s.a}</div><pre>${html}</pre></div>`;}).join("");
+}
+function copyShot(n,btn){
+  const full=assembleShot(SHOTS.find(x=>x.n===n));
+  navigator.clipboard.writeText(full).then(()=>{btn.textContent="copied ✓";setTimeout(()=>btn.textContent="copy full prompt",1500);});
+}
+function copyText(txt,btn){
+  const old=btn.textContent;
+  navigator.clipboard.writeText(txt).then(()=>{btn.textContent="copied ✓";setTimeout(()=>btn.textContent=old,1500);});
+}
+function copyRun(n,btn){
+  copyText(`${FTL_KEY}\n\n${FTL_QUALITY_KEY}\n\n${FTL_WORLD_KEY}\n\n${FTL_PROGRAM}\n\nRENDER:: SHOT ${n}`,btn);
+}
+</script>
+</body>
+</html>

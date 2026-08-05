@@ -1,0 +1,13 @@
+# secrets — never commit
+keys.json
+keys.json.bak_local
+*.key
+.env
+
+# heavy build artifacts
+ftl-studio-package.zip
+films/**/*.mp4
+films/**/concat.txt
+
+# node
+node_modules/

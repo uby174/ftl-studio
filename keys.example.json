@@ -1,0 +1,9 @@
+{
+  "ANTHROPIC_API_KEY": "",
+  "GOOGLE_API_KEY": "",
+  "models": {
+    "compiler": "claude-opus-5",
+    "image": "gemini-2.5-flash-image",
+    "video": "veo-3.1-generate-preview"
+  }
+}

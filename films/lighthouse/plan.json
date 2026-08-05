@@ -1,0 +1,39 @@
+{
+  "title": "the-keeper-and-the-ninth-prism",
+  "characterStill": "Photorealistic portrait of an aged lighthouse keeper, centered, chest-up, three-quarter turn. Face-lock: a broken hooked nose with a flattened bridge; a vertical white scar splitting the left eyebrow; a heavy shelf-like brow over deep-set grey eyes; sun-cracked crow's feet fanning to both temples; a square-cropped snow-white beard; white hair combed back wet against the skull. He wears all of: an oiled navy canvas storm coat with a torn shoulder seam, a mustard wool guernsey sweater, a brass-buckled leather tool belt, and fingerless grey wool gloves. Amber oil-flame light rakes his left cheek, cold storm-blue glow fills the right. Shallow depth of field, fine 35mm film grain, palette of brass amber, sea-green and wet slate grey.",
+  "setStill": "Photorealistic interior of a lighthouse lamp room at storm dusk. Centerpiece: a man-tall rotating lens, concentric glass rings banded in tarnished brass on a geared carriage, one wedge segment missing to leave a black gap. Textures of age: salt-frosted glazing, flaking green paint, brass floor plates worn to bare metal by decades of boots, rust weeping from bolt heads. Rain hammers the curved windows; the sea beyond is bruised grey-green. The single named light source is the lamp's guttering oil flame at the lens core, throwing amber blades across the walls. Shallow depth of field, fine 35mm film grain, palette of brass amber, sea-green and wet slate grey. 16:9.",
+  "shots": [
+    {
+      "1": "",
+      "n": 1,
+      "title": "arrival-through-the-hatch",
+      "seconds": 8,
+      "firstFrame": "Wide establishing shot, low camera set on the brass floor plates of the room from the reference image, 16:9. The man from the reference image rises through the floor hatch at frame-right, off-center, an oilcloth-wrapped prism bundle clamped under one arm, body angled facing frame-left toward the great lens. Foreground: a rusted bolt head and a spreading puddle in soft focus. The lamp's oil flame is tiny and guttering, barely alive — the room is mostly storm-dark, the black gap in the lens rings reads clearly, and the weak flame just touches his beard.",
+      "motion": "Camera pushes in slowly, low and level, holding the man at frame-right. He steps clear of the hatch, still facing frame-left, and lowers the oilcloth prism bundle onto the brass floor plate. His gloved hand presses flat on the cloth to steady it. Water runs off his coat hem and leaves a wet dark bootprint smear across the worn brass. The oil flame in the lens shivers as the draught follows him up. One continuous take. SFX: hatch timber groaning, oilcloth scraping brass, a heavy exhale. Ambient noise: rain drumming curved glass, wind moaning in the gallery rail."
+    },
+    {
+      "2": "",
+      "n": 2,
+      "title": "unrolling-the-tools",
+      "seconds": 6,
+      "firstFrame": "Medium shot, eye-level, camera low beside the floor plate, 16:9. The man from the reference image kneels off-center at frame-right, facing frame-left, the oilcloth prism bundle before him and his wet bootprint smear still dark on the brass. Foreground: the blurred lower rings of the lens from the reference image. Amber oil-flame light catches his knuckles; storm-blue window glow rims his shoulder.",
+      "motion": "Camera holds still at eye-level, the man kneeling frame-right. He unbuckles his tool belt roll and lays the canvas flat, then folds back the oilcloth to bare the wedge prism, its cut edge flaring amber. He lifts a brass clamp key from the roll and sets it on his thigh. The opened oilcloth soaks up his bootprint water, the stain creeping outward across the cloth. One continuous take. SFX: canvas unrolling, buckle tongue clicking, glass ringing faintly on brass. Ambient noise: rain on glazing, the slow tick of the lens gears. The keeper says, \"Steady now. One piece missing is all.\""
+    },
+    {
+      "3": "",
+      "n": 3,
+      "title": "seating-the-prism",
+      "seconds": 4,
+      "firstFrame": "Macro insert, extreme close-up, camera at hand height, 16:9. The keeper's fingerless-gloved hands fill frame-left of centre, cradling the wedge prism into the black gap of the lens from the reference image, brass clamp key held between two fingers. Foreground: a salt-crusted brass rib in soft blur. Only the oil flame lights this, amber sliding along the prism's cut edge.",
+      "motion": "Camera stays locked in macro, hands working frame-left. Two thumbs press the wedge prism into the empty seat, and the brass clamp key turns a quarter turn, pinching the retaining bracket tight. Old paint flakes lift from the bracket and drift onto the wet oilcloth below. The oil flame's light suddenly bends through the seated prism and lays a bright amber bar across the keeper's knuckles. One continuous take. SFX: glass settling into brass, a metallic quarter-turn creak, paint flakes ticking down. Ambient noise: muffled rain, deep wind pressure against the tower."
+    },
+    {
+      "4": "",
+      "n": 4,
+      "title": "the-beam-goes-out",
+      "seconds": 8,
+      "firstFrame": "Wide reverse payoff shot, high camera behind the curved gallery glazing looking back into the lamp room, 16:9. The man from the reference image stands off-center at frame-right in silhouette, facing frame-left, one hand on the lens carriage, the brass clamp key still in the other. Foreground: rain sheeting down the salt-frosted glass. The seated prism burns brightest of all the rings.",
+      "motion": "Camera drifts slowly upward and back behind streaming glass, keeping the keeper small at frame-right. He releases the lens carriage and the geared lens turns; the newly seated prism swings past and throws one hard amber blade out through the rain. The beam lights the falling water and paints a moving bar of gold across his coat and the wet brass floor. He lowers the clamp key to his side. One continuous take. SFX: gear teeth engaging, a low mechanical hum, the key tapping his belt. Ambient noise: rain roar, wind, distant surf on rock."
+    }
+  ]
+}

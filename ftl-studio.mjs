@@ -1,0 +1,415 @@
+#!/usr/bin/env node
+/*
+FTL STUDIO — end-to-end video wrapper for the Funnel-Tree Prompt Architecture.
+
+  seed sentence ──▶ Claude (FTL compiler) ──▶ canon stills (Gemini image)
+                ──▶ per-shot first frames ──▶ Veo image-to-video ──▶ clips + film
+
+USAGE
+  node ftl-studio.mjs setup                          write keys.json template
+  node ftl-studio.mjs models                         list your available Google models
+  node ftl-studio.mjs "an old lighthouse keeper..."  make a film (3 shots default)
+     --shots N      number of shots (1-6, default 3)
+     --name NAME    project folder name (default: derived from seed)
+     --shot N       only generate video for shot N
+     --skip-video   compile + stills only (cheap dry run)
+     --redo-stills  regenerate stills even if they exist
+
+KEYS (keys.json next to this file, or environment variables)
+  ANTHROPIC_API_KEY   console.anthropic.com        — the compiler brain
+  GOOGLE_API_KEY      aistudio.google.com/apikey   — stills (Gemini image) + video (Veo)
+
+Everything is resume-safe: existing files are skipped, so re-running continues
+where it stopped. Artifacts land in films/<name>/.
+*/
+import fs from 'node:fs';
+import path from 'node:path';
+import { execSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
+
+const HERE = path.dirname(fileURLToPath(import.meta.url));
+const KEYS_PATH = path.join(HERE, 'keys.json');
+
+// ---------- config ----------
+export function loadKeys() {
+  let k = {};
+  if (fs.existsSync(KEYS_PATH)) k = JSON.parse(fs.readFileSync(KEYS_PATH, 'utf8'));
+  const cfg = {
+    anthropic: k.ANTHROPIC_API_KEY || process.env.ANTHROPIC_API_KEY || '',
+    google: k.GOOGLE_API_KEY || process.env.GOOGLE_API_KEY || '',
+    models: Object.assign(
+      { compiler: 'claude-opus-5', image: 'gemini-2.5-flash-image', video: 'veo-3.1-generate-preview' },
+      k.models || {},
+    ),
+  };
+  return cfg;
+}
+
+function setup() {
+  if (fs.existsSync(KEYS_PATH)) return console.log(`keys.json already exists at ${KEYS_PATH}`);
+  fs.writeFileSync(KEYS_PATH, JSON.stringify({
+    ANTHROPIC_API_KEY: '',
+    GOOGLE_API_KEY: '',
+    models: { compiler: 'claude-opus-5', image: 'gemini-2.5-flash-image', video: 'veo-3.1-generate-preview' },
+  }, null, 2));
+  console.log(`Wrote ${KEYS_PATH} — paste your keys into it.`);
+}
+
+const log = (s) => console.log(`\x1b[33m▸\x1b[0m ${s}`);
+const ok = (s) => console.log(`\x1b[32m✓\x1b[0m ${s}`);
+const die = (s) => { console.error(`\x1b[31m✕ ${s}\x1b[0m`); process.exit(1); };
+
+// ---------- step 1: Claude compiles the film ----------
+const COMPILER_SYSTEM = `You are the FTL Studio Compiler for the Funnel-Tree Prompt
+Architecture. You turn a plain film description into a stills-first production plan.
+
+Run the funnel internally: scatter the description into semantic nodes, expand each
+through form/material/motion/light/sound/physics, converge conflicts (identity always
+wins), then emit the plan.
+
+HARD RULES:
+- Fully original content only. If the description names copyrighted characters or
+  franchises, replace them with visually equivalent original characters.
+- characterStill: a photorealistic portrait prompt with a FACE-LOCK — 4-6 distinctive
+  invariant facial anchors (scar, nose shape, brow, hair) + full wardrobe with "wears
+  all of" phrasing + mood lighting. The character centered. ~110 words.
+- setStill: a photorealistic location prompt with ONE distinctive centerpiece object,
+  time-of-day lock, weather, textures of age, one named light source. ~110 words.
+- Both stills share one photographic DNA: shallow depth of field, fine 35mm film
+  grain, motivated light from nameable sources, a locked palette. Bake it into both.
+- shots: an arc of small beats (arrive -> act -> payoff). Each shot:
+  * seconds: exactly 4, 6, or 8.
+  * firstFrame: a still-image prompt for the shot's opening frame. Refer to "the man
+    from the reference image" / "the room from the reference image" style references
+    instead of re-describing them. Compose the frame: camera angle, subject position,
+    what is lit. ~60-80 words.
+  * motion: the video prompt in Google's official Veo formula — CAMERA FIRST, then
+    the single small precise action (hands/faces/props do the acting), one causality
+    trace (a mark or reaction the action leaves on the world), "One continuous take."
+    Then audio as separate sentences: SFX: ... / Ambient noise: ... Any dialogue as:
+    The character says, "..." — 60-110 words. Short declarative sentences.
+  * Phrase all exclusions positively (say what IS there, never "no X" / "don't").
+- If 3 or more shots, exactly one is a macro insert (extreme close-up of hands or a
+  material detail).
+
+DIRECTOR'S RULES (these override everything else about composition):
+- Every firstFrame is a CANDID FILM STILL, never a portrait: the character is
+  mid-action, eyes on his work or his world, NEVER looking at or facing the camera.
+- Composition: subject OFF-CENTER (rule of thirds), a foreground element for depth,
+  camera height stated (low / eye-level / high / overhead), 16:9 widescreen framing.
+- Shot grammar with intent: vary sizes across the film — a wide that establishes,
+  a medium that works, one macro insert, a wide or reverse that pays off. State the
+  size in every firstFrame.
+- Screen direction: pick one facing direction for the character's work (e.g. he
+  works facing frame-left) and keep it consistent in every shot description.
+- PROP THROUGH-LINE: one physical object carries the story across the shots — seen
+  broken or needed, then handled, then used, then changed in the final shot. Name it
+  in every shot's firstFrame and motion.
+- CAUSALITY: each shot's action visibly changes one thing in the world, and the next
+  shot inherits that change. The final shot shows the accumulated result.
+- No object may appear that the story did not introduce (tools come from the tool
+  roll, light comes from named sources).
+
+OUTPUT: ONLY a JSON object, no markdown fences, exactly this shape:
+{"title":"kebab-case-short-title","characterStill":"...","setStill":"...",
+ "shots":[{"n":1,"title":"...","seconds":8,"firstFrame":"...","motion":"..."}]}`;
+
+export async function compileFilm(cfg, seed, nShots) {
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      'x-api-key': cfg.anthropic,
+      'anthropic-version': '2023-06-01',
+    },
+    body: JSON.stringify({
+      model: cfg.models.compiler,
+      max_tokens: 8000,
+      system: COMPILER_SYSTEM,
+      messages: [{ role: 'user', content: `FILM DESCRIPTION: "${seed}"\nSHOTS: ${nShots}\nCompile the production plan.` }],
+    }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(`Claude API: ${data?.error?.message || res.status}`);
+  if (data.stop_reason === 'refusal') throw new Error('Claude declined this description — rephrase it.');
+  let text = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('\n').trim()
+    .replace(/^```[a-z]*\n?/, '').replace(/\n?```$/, '');
+  const plan = JSON.parse(text);
+  if (!plan.shots?.length) throw new Error('Compiler returned no shots.');
+  for (const s of plan.shots) if (![4, 6, 8].includes(s.seconds)) s.seconds = 8;
+  return plan;
+}
+
+// ---------- step 2: Gemini image generation ----------
+export async function genImage(cfg, prompt, refPngs = [], tries = 3) {
+  // references FIRST, instruction text last — the documented best practice
+  const parts = [];
+  for (const p of refPngs) parts.push({ inlineData: { mimeType: 'image/png', data: fs.readFileSync(p).toString('base64') } });
+  parts.push({ text: prompt });
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${cfg.models.image}:generateContent`;
+  const gcWide = { responseModalities: ['TEXT', 'IMAGE'], imageConfig: { aspectRatio: '16:9' } };
+  const gcPlain = { responseModalities: ['TEXT', 'IMAGE'] };
+  let useWide = true;
+  let lastErr = '';
+  for (let attempt = 1; attempt <= tries; attempt++) {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', 'x-goog-api-key': cfg.google },
+      body: JSON.stringify({ contents: [{ parts }], generationConfig: useWide ? gcWide : gcPlain }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      const msg = data?.error?.message || String(res.status);
+      if (useWide && /imageConfig|aspectRatio|aspect_ratio|Unknown name/i.test(msg)) { useWide = false; attempt--; continue; }
+      throw new Error(`image API: ${msg}`);
+    }
+    const img = (data.candidates?.[0]?.content?.parts || []).find(p => p.inlineData?.data);
+    if (img) return Buffer.from(img.inlineData.data, 'base64');
+    lastErr = data.candidates?.[0]?.finishReason || 'no image';
+    if (attempt < tries) { log(`  image attempt ${attempt} returned ${lastErr} — retrying …`); await new Promise(r => setTimeout(r, 2000)); }
+  }
+  throw new Error(`image model returned no image after ${tries} tries (${lastErr})`);
+}
+
+// ---------- step 3: Veo image-to-video ----------
+export async function genVideo(cfg, prompt, framePng, seconds, outPath) {
+  const base = 'https://generativelanguage.googleapis.com/v1beta';
+  const imgB64 = fs.readFileSync(framePng).toString('base64');
+  const wantRes = seconds >= 8 ? '1080p' : '720p'; // Veo: 1080p only at 8s
+  const bodies = [];
+  for (const resn of [wantRes, '720p'].filter((v, i, a) => a.indexOf(v) === i)) {
+    bodies.push({ instances: [{ prompt, image: { inlineData: { mimeType: 'image/png', data: imgB64 } } }],
+      parameters: { aspectRatio: '16:9', resolution: resn, durationSeconds: seconds } });
+    bodies.push({ instances: [{ prompt, image: { bytesBase64Encoded: imgB64, mimeType: 'image/png' } }],
+      parameters: { aspectRatio: '16:9', resolution: resn, durationSeconds: seconds } });
+  }
+  let opName = null, lastErr = null;
+  for (const body of bodies) {
+    const res = await fetch(`${base}/models/${cfg.models.video}:predictLongRunning`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', 'x-goog-api-key': cfg.google },
+      body: JSON.stringify(body),
+    });
+    const data = await res.json();
+    if (res.ok && data.name) { opName = data.name; break; }
+    lastErr = data?.error?.message || `HTTP ${res.status}`;
+  }
+  if (!opName) throw new Error(`Veo request rejected: ${lastErr}`);
+
+  const t0 = Date.now();
+  while (true) {
+    await new Promise(r => setTimeout(r, 10000));
+    const res = await fetch(`${base}/${opName}`, { headers: { 'x-goog-api-key': cfg.google } });
+    const op = await res.json();
+    if (op.error) throw new Error(`Veo operation: ${op.error.message}`);
+    if (op.done) {
+      const resp = op.response?.generateVideoResponse || op.response || {};
+      if (resp.raiMediaFilteredCount > 0 && !resp.generatedSamples?.length)
+        throw new Error(`policy-filtered: ${resp.raiMediaFilteredReasons?.join('; ') || 'no reason given'} — re-run to retry`);
+      const uri = resp.generatedSamples?.[0]?.video?.uri;
+      if (!uri) throw new Error(`no video in response (${JSON.stringify(op.response).slice(0, 200)})`);
+      const vidRes = await fetch(uri.includes('key=') ? uri : uri, { headers: { 'x-goog-api-key': cfg.google } });
+      if (!vidRes.ok) throw new Error(`video download failed: HTTP ${vidRes.status}`);
+      fs.writeFileSync(outPath, Buffer.from(await vidRes.arrayBuffer()));
+      return;
+    }
+    process.stdout.write(`\r  … Veo rendering (${Math.round((Date.now() - t0) / 1000)}s)`);
+    if (Date.now() - t0 > 8 * 60 * 1000) throw new Error('Veo timed out after 8 minutes');
+  }
+}
+
+// ---------- helpers ----------
+async function listModels(cfg) {
+  if (!cfg.google) die('GOOGLE_API_KEY missing — run: node ftl-studio.mjs setup');
+  const res = await fetch('https://generativelanguage.googleapis.com/v1beta/models?pageSize=200',
+    { headers: { 'x-goog-api-key': cfg.google } });
+  const data = await res.json();
+  if (!res.ok) die(data?.error?.message || `HTTP ${res.status}`);
+  const names = (data.models || []).map(m => m.name.replace('models/', ''));
+  console.log('\nVIDEO (use as models.video in keys.json):');
+  names.filter(n => /veo/i.test(n)).forEach(n => console.log('  ' + n));
+  console.log('\nIMAGE (use as models.image):');
+  names.filter(n => /image|imagen/i.test(n)).forEach(n => console.log('  ' + n));
+}
+
+function haveFfmpeg() { try { execSync('ffmpeg -version', { stdio: 'ignore' }); return true; } catch { return false; } }
+
+function clipDuration(f) {
+  return parseFloat(execSync(
+    `ffprobe -v quiet -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "${f}"`,
+  ).toString().trim());
+}
+
+// Post-production: normalize every clip, unified grade + grain, 0.3s cross-
+// dissolves with audio crossfades, fade in/out. One film, one look.
+export function finishFilm(dir, clips) {
+  const X = 0.3;
+  const durs = clips.map(clipDuration);
+  const inputs = clips.map(c => `-i "${c}"`).join(' ');
+  const norm = clips.map((_, i) =>
+    `[${i}:v]scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,fps=24,setsar=1,format=yuv420p[v${i}];[${i}:a]aresample=48000[a${i}]`).join(';');
+  let vChain = '', aChain = '', prevV = 'v0', prevA = 'a0', offset = 0;
+  for (let i = 1; i < clips.length; i++) {
+    offset += durs[i - 1] - X;
+    vChain += `;[${prevV}][v${i}]xfade=transition=fade:duration=${X}:offset=${offset.toFixed(3)}[vx${i}]`;
+    aChain += `;[${prevA}][a${i}]acrossfade=d=${X}[ax${i}]`;
+    prevV = `vx${i}`; prevA = `ax${i}`;
+  }
+  const total = durs.reduce((a, b) => a + b, 0) - X * (clips.length - 1);
+  const grade = `;[${prevV}]eq=contrast=1.05:saturation=0.93:brightness=-0.01,noise=alls=5:allf=t,` +
+    `fade=t=in:st=0:d=0.6,fade=t=out:st=${(total - 0.8).toFixed(3)}:d=0.8[vout]` +
+    `;[${prevA}]afade=t=in:st=0:d=0.5,afade=t=out:st=${(total - 0.9).toFixed(3)}:d=0.9,loudnorm=I=-16:TP=-1.5[aout]`;
+  const fc = norm + vChain + aChain + grade;
+  const out = path.join(dir, 'film.mp4');
+  execSync(`ffmpeg -y -v error ${inputs} -filter_complex "${fc}" -map "[vout]" -map "[aout]" -c:v libx264 -preset slow -crf 18 -c:a aac -b:a 192k "${out}"`,
+    { maxBuffer: 64 * 1024 * 1024 });
+}
+
+// ---------- programmatic API (import { makeFilm } from './ftl-studio.mjs') ----------
+/**
+ * Run the full FTPA pipeline. Resume-safe: existing artifacts are reused.
+ * @param {object} cfg      from loadKeys(), or {anthropic, google, models:{compiler,image,video}}
+ * @param {object} opts     {seed, shots=3, name, onlyShot=null, skipVideo=false,
+ *                           redoStills=false, outRoot=<pkg>/films, onEvent=(e)=>{}}
+ * @returns {Promise<{dir, plan, clips: string[], film: string|null, errors: string[]}>}
+ */
+export async function makeFilm(cfg, opts) {
+  const { seed, name = null, onlyShot = null, skipVideo = false, redoStills = false,
+    outRoot = path.join(HERE, 'films'), onEvent = null } = opts;
+  const nShots = Math.min(6, Math.max(1, opts.shots || 3));
+  const errors = [];
+  const emit = (stage, detail) => { if (onEvent) onEvent({ stage, detail }); };
+  if (!seed) throw new Error('makeFilm: opts.seed is required');
+  if (!cfg.anthropic) throw new Error('ANTHROPIC_API_KEY missing');
+  if (!cfg.google) throw new Error('GOOGLE_API_KEY missing');
+
+  // 1 — compile
+  let dir, plan;
+  const tmpName = name || seed.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40);
+  dir = path.join(outRoot, tmpName);
+  fs.mkdirSync(dir, { recursive: true });
+  const planPath = path.join(dir, 'plan.json');
+  if (fs.existsSync(planPath)) {
+    plan = JSON.parse(fs.readFileSync(planPath, 'utf8'));
+    ok(`plan.json exists — reusing compiled plan (${plan.shots.length} shots)`);
+  } else {
+    log(`compiling "${seed}" with ${cfg.models.compiler} …`);
+    emit('compile', seed);
+    plan = await compileFilm(cfg, seed, nShots);
+    fs.writeFileSync(planPath, JSON.stringify(plan, null, 2));
+    ok(`compiled: "${plan.title}" — ${plan.shots.length} shots -> ${planPath}`);
+  }
+  emit('plan', plan);
+
+  // 2 — canon stills
+  const charPath = path.join(dir, 'character.png');
+  const setPath = path.join(dir, 'set.png');
+  for (const [p, promptKey, label] of [[charPath, 'characterStill', 'character'], [setPath, 'setStill', 'set']]) {
+    if (fs.existsSync(p) && !redoStills) { ok(`${label}.png exists — canon kept`); continue; }
+    log(`generating canon ${label} still …`);
+    emit('still', label);
+    fs.writeFileSync(p, await genImage(cfg, plan[promptKey]));
+    ok(`${label}.png  (not happy? delete it or use --redo-stills and re-run)`);
+  }
+
+  // 3 — per shot: first frame then video
+  for (const s of plan.shots) {
+    if (onlyShot && String(s.n) !== String(onlyShot)) continue;
+    const framePath = path.join(dir, `shot${s.n}_frame.png`);
+    if (!fs.existsSync(framePath) || redoStills) {
+      log(`shot ${s.n} "${s.title}" — first frame …`);
+      // frame chaining: previous shot's frame locks the set geometry for this one
+      const prevFrame = path.join(dir, `shot${s.n - 1}_frame.png`);
+      const refs = [charPath, setPath];
+      let chainNote = '';
+      if (fs.existsSync(prevFrame)) { refs.push(prevFrame); chainNote = ' The third image is a frame already filmed from this same movie: keep the room, the lamp design, its geometry and its state of light EXACTLY as they appear there — this shot happens moments later in the same place.'; }
+      const framePrompt = (note) =>
+        `The first image is the man. The second image is the room. Create one new photorealistic 16:9 widescreen cinematic film still of this exact man inside this exact room, keeping his face, wardrobe, the room's lamp design and lighting identical to the references.${note} This is a candid frame from a movie: he is mid-action with his eyes on his work, never looking at the camera, placed off-center with foreground depth. Full-bleed widescreen, zero black bars or borders. Composition: ${s.firstFrame}`;
+      // progressive reference fallback: full chain -> canon only -> set only
+      const attempts = [[refs, chainNote]];
+      if (refs.length > 2) attempts.push([[charPath, setPath], '']);
+      attempts.push([[setPath], ' There is only one reference image: the room. Keep it exact.']);
+      let done = false;
+      for (const [r, note] of attempts) {
+        try {
+          fs.writeFileSync(framePath, await genImage(cfg, framePrompt(note), r));
+          ok(`shot${s.n}_frame.png${r.length < refs.length ? ` (composited from ${r.length} reference${r.length > 1 ? 's' : ''})` : ''}`);
+          done = true; break;
+        } catch (e) { log(`  frame with ${r.length} refs failed (${e.message.slice(0, 60)}) — reducing references …`); }
+      }
+      if (!done) {
+        console.error(`\x1b[31m✕ shot ${s.n} frame failed on all reference sets\x1b[0m — continuing; re-run to retry`);
+        errors.push(`shot ${s.n}: frame generation failed`);
+        continue;
+      }
+    }
+    if (skipVideo) continue;
+    const clipPath = path.join(dir, `shot${s.n}.mp4`);
+    if (fs.existsSync(clipPath)) { ok(`shot${s.n}.mp4 exists — skipping`); continue; }
+    log(`shot ${s.n} "${s.title}" — Veo ${s.seconds}s (${cfg.models.video}) …`);
+    emit('video', s);
+    try {
+      const motion = `${s.motion} The action is already underway when the shot begins and is still in motion when it ends — natural continuous human movement, no held pose, no freeze.`;
+      await genVideo(cfg, motion, framePath, s.seconds, clipPath);
+      console.log('');
+      ok(`shot${s.n}.mp4`);
+    } catch (e) {
+      console.log('');
+      console.error(`\x1b[31m✕ shot ${s.n}: ${e.message}\x1b[0m — continuing with remaining shots`);
+      errors.push(`shot ${s.n}: ${e.message}`);
+    }
+  }
+
+  // 4 — assemble + finishing pass (grade, grain, dissolves, fades)
+  let filmPath = null;
+  const clips = plan.shots.map(s => path.join(dir, `shot${s.n}.mp4`)).filter(f => fs.existsSync(f));
+  if (!skipVideo && clips.length > 1 && haveFfmpeg()) {
+    emit('assemble', clips.length);
+    try {
+      finishFilm(dir, clips);
+      filmPath = path.join(dir, 'film.mp4');
+      ok(`film.mp4 — ${clips.length} shots, graded and finished`);
+    } catch (e) {
+      console.error(`✕ finishing pass failed (${e.message}) — falling back to plain concat`);
+      const listFile = path.join(dir, 'concat.txt');
+      fs.writeFileSync(listFile, clips.map(c => `file '${c.replace(/\\/g, '/')}'`).join('\n'));
+      try {
+        execSync(`ffmpeg -y -v quiet -f concat -safe 0 -i "${listFile}" -c copy "${path.join(dir, 'film.mp4')}"`);
+        filmPath = path.join(dir, 'film.mp4');
+        ok(`film.mp4 — ${clips.length} shots assembled (plain cut)`);
+      } catch { console.error('✕ concat also failed — clips are still in the folder'); }
+    }
+  }
+  emit('done', { dir, filmPath, errors });
+  return { dir, plan, clips, film: filmPath, errors };
+}
+
+// ---------- CLI ----------
+async function main() {
+  const args = process.argv.slice(2);
+  if (!args.length || args[0] === '--help' || args[0] === '-h') {
+    console.log(fs.readFileSync(fileURLToPath(import.meta.url), 'utf8').split('*/')[0].split('/*')[1]);
+    return;
+  }
+  if (args[0] === 'setup') return setup();
+  const cfg = loadKeys();
+  if (args[0] === 'models') return listModels(cfg);
+
+  const flag = (name, dflt) => { const i = args.indexOf(name); return i > -1 ? args[i + 1] : dflt; };
+  const result = await makeFilm(cfg, {
+    seed: args[0],
+    shots: parseInt(flag('--shots', '3'), 10),
+    name: flag('--name', null),
+    onlyShot: flag('--shot', null),
+    skipVideo: args.includes('--skip-video'),
+    redoStills: args.includes('--redo-stills'),
+  });
+  console.log(`\n\x1b[32mDone.\x1b[0m Everything is in ${result.dir}`);
+  if (result.errors.length) console.log(`\x1b[33mWith ${result.errors.length} issue(s):\x1b[0m ${result.errors.join(' | ')}`);
+  console.log('Re-roll anything by deleting its file and re-running the same command.');
+}
+
+// run the CLI only when executed directly — importing this file is side-effect-free
+import { pathToFileURL } from 'node:url';
+const isCLI = process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href;
+if (isCLI) main().catch(e => die(e.stack || e.message));

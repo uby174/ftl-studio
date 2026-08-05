@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Google Flow — How Videos Are Built + The Official Prompt Format</title>
+<style>
+  body{background:#0b0e14;color:#e8ecf4;font-family:'Segoe UI',system-ui,sans-serif;
+    max-width:900px;margin:0 auto;padding:30px 20px 80px;line-height:1.55}
+  h1{font-size:23px;text-align:center}
+  h1 span{color:#e8b64c}
+  p.lead{color:#8b96ad;font-size:14px;text-align:center;margin:8px 0 4px}
+  .phase{font-family:Consolas,monospace;font-size:12px;letter-spacing:3px;color:#e8b64c;
+    margin:34px 0 4px;border-bottom:1px solid #2a3348;padding-bottom:6px}
+  section{background:#121722;border:1px solid #2a3348;border-radius:12px;
+    padding:16px 18px;margin-top:16px}
+  h2{font-size:15px}
+  h2 small{color:#8b96ad;font-weight:400;font-size:12px;margin-left:8px}
+  table{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px}
+  th,td{border:1px solid #2a3348;padding:8px 10px;text-align:left;vertical-align:top}
+  th{color:#e8b64c;font-family:Consolas,monospace;font-size:11px;letter-spacing:1px}
+  td b{color:#5fd0c5}
+  .formula{font-family:Consolas,monospace;font-size:13px;color:#7ec98f;background:#0f1420;
+    border:1px solid #2a3348;border-radius:8px;padding:12px;margin:10px 0;text-align:center}
+  button{display:block;width:100%;background:#e8b64c;color:#161006;border:none;
+    border-radius:8px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;margin:10px 0 8px}
+  button:hover{filter:brightness(1.1)}
+  pre{white-space:pre-wrap;font-family:Consolas,monospace;font-size:12px;color:#aeb9cd;
+    background:#0f1420;border:1px solid #2a3348;border-radius:8px;padding:12px;margin:0}
+  .note{font-size:12px;color:#8b96ad;margin-top:6px}
+  ul,ol{font-size:13px;color:#c6cede;padding-left:20px;line-height:1.8}
+  .anatomy span{display:inline-block;border-radius:4px;padding:0 4px;margin:1px 0}
+  .c1{background:#3a2f14;color:#e8b64c}.c2{background:#14303a;color:#5fd0c5}
+  .c3{background:#1c3a1c;color:#7ec98f}.c4{background:#2a2440;color:#b18ae8}
+  .c5{background:#3a1c22;color:#e8909e}.c6{background:#333;color:#cfd8e8}
+</style>
+</head>
+<body>
+<h1>Google Flow · <span>How Videos Are Built + The Official Prompt Format</span></h1>
+<p class="lead">Researched from Google's official Veo 3.1 prompting guide and the Google Labs Flow documentation.</p>
+
+<div class="phase">PART 1 · HOW FLOW ACTUALLY BUILDS A VIDEO — the 5 generation modes</div>
+<section>
+  <table>
+    <tr><th>MODE</th><th>WHAT IT DOES</th><th>WHAT THE PROMPT SHOULD CONTAIN</th></tr>
+    <tr><td><b>Text to Video</b></td><td>Generates a clip from words alone. Everything is re-imagined each run — highest drift.</td><td>The full official formula (Part 2). Use only for the very first canon material.</td></tr>
+    <tr><td><b>Frames to Video</b></td><td>You supply the <b>first frame</b> (and optionally a last frame); Veo animates between them. Has camera-control buttons.</td><td>MOTION ONLY: what moves, camera move, audio. The image already carries all visual truth. Keep the UI camera-control selection consistent with the prompt text.</td></tr>
+    <tr><td><b>Ingredients to Video</b></td><td>You supply 1–3 reference images (character, object, setting, style); Veo combines them into one scene.</td><td>How the ingredients interact + camera + audio. Don't re-describe what the images show.</td></tr>
+    <tr><td><b>Extend</b> <small>(Scenebuilder)</small></td><td>Continues an existing clip from where it ends, same world.</td><td>Only "how the action continues." Nothing else.</td></tr>
+    <tr><td><b>Jump To</b> <small>(Scenebuilder)</small></td><td>Transitions a character/object to a NEW setting while preserving their appearance.</td><td>Only the new setting and what happens there.</td></tr>
+  </table>
+  <ul style="margin-top:10px">
+    <li><b>Scenebuilder</b> is the timeline: you sequence clips into one scene per project — assembly, not generation.</li>
+    <li>Clips are <b>4, 6 or 8 seconds</b>, 720p/1080p, 16:9 or 9:16. Plan shots to those lengths.</li>
+    <li><b>The pro loop:</b> make reference images (Flow's image tool / Gemini image) → lock them as Ingredients → per shot: Frames-to-Video or Ingredients-to-Video with a short motion prompt → assemble in Scenebuilder → Extend for continuations.</li>
+  </ul>
+</section>
+
+<div class="phase">PART 2 · GOOGLE'S OFFICIAL PROMPT FORMULA (one flowing paragraph, this exact order)</div>
+<section>
+  <div class="formula">[CINEMATOGRAPHY] + [SUBJECT] + [ACTION] + [CONTEXT] + [STYLE &amp; AMBIANCE]<br>then audio as separate sentences: dialogue "…" · SFX: … · Ambient noise: …</div>
+  <p class="anatomy" style="font-size:13px;line-height:1.9">
+    <span class="c1">Slow push-in dolly at a low angle, shallow depth of field.</span>
+    <span class="c2">A stocky lighthouse keeper in his seventies with a short white beard and a scar through his left eyebrow, in an oat wool sweater under a brass-buttoned waistcoat.</span>
+    <span class="c3">He climbs up through an open floor hatch, straightens slowly, and looks out at the storm.</span>
+    <span class="c4">Inside the round lantern room of an old stone lighthouse at dusk, rain streaking the tall panes.</span>
+    <span class="c5">Moody maritime realism, fine 35mm film grain, slate-blue palette with one warm lantern glow.</span>
+    <span class="c6">SFX: boots on iron, one far roll of thunder. Ambient noise: wind rising around the tower.</span>
+  </p>
+  <table>
+    <tr><th>RULE</th><th>OFFICIAL FORM</th></tr>
+    <tr><td><b>Camera first</b></td><td>Name the shot type or Veo defaults to generic framing: "Medium shot", "Locked-off wide", "Tracking shot", "Extreme close-up, macro lens".</td></tr>
+    <tr><td><b>Dialogue</b></td><td>In quotes, attributed: <i>A woman says, "We have to leave now."</i></td></tr>
+    <tr><td><b>Sound effects</b></td><td>Own sentence, prefixed: <i>SFX: thunder cracks in the distance.</i></td></tr>
+    <tr><td><b>Ambience</b></td><td>Own sentence: <i>Ambient noise: the quiet hum of a starship bridge.</i></td></tr>
+    <tr><td><b>Exclusions</b></td><td>Describe positively, never "no/don't": write <i>"a desolate landscape with no buildings"</i>, not <i>"don't show buildings"</i>.</td></tr>
+    <tr><td><b>Multi-beat in one clip</b></td><td>Timestamp blocks: <i>[00:00-00:02] beat one… [00:02-00:04] beat two… SFX: …</i></td></tr>
+    <tr><td><b>Length</b></td><td>Google's own examples are ~60–120 words. Compact beats exhaustive — identity belongs in Ingredients, not in prose.</td></tr>
+  </table>
+</section>
+
+<div class="phase">PART 3 · OUR FILM IN THE OFFICIAL FORMAT — The Lighthouse Keeper</div>
+
+<section>
+  <h2>SHOT 1 · The Climb <small>8s · Frames-to-Video (use your approved first-frame still)</small></h2>
+  <button onclick="copyIt(this)">📋 copy motion prompt (official format)</button>
+  <pre>Slow push-in dolly at a low angle, shallow depth of field. The keeper climbs the last steps up through the open floor hatch and straightens slowly. His boots leave faint damp prints on the iron. Dust stirs at each step. He looks first at the dark lens, then out at the storm front through the glass. One continuous take. Moody maritime realism, fine film grain, slate-blue dusk with one warm lantern glow. SFX: boots on iron, one far roll of thunder. Ambient noise: wind rising around the tower, gulls crying outside the glass.</pre>
+  <p class="note">Text-to-Video fallback (no still yet) — full formula version:</p>
+  <button onclick="copyIt(this)">📋 copy full text-to-video version</button>
+  <pre>Slow push-in dolly at a low angle, shallow depth of field. A stocky lighthouse keeper in his seventies with a deeply lined face, flattened once-broken nose, short white beard, thick white hair combed back and a small scar through his left eyebrow, wearing an oat-colored flecked wool sweater under a dark-brown brass-buttoned waistcoat. He climbs up through an open floor hatch into the room, straightens slowly, and looks first at the dark lens, then out at the storm through the glass. Inside the round lantern room of an old stone lighthouse at dusk: one great intact beehive-shaped Fresnel lens on an iron pedestal, riveted iron floor, whitewashed stone, rain beginning to streak the tall storm panes, a burning brass hand lantern beside the hatch, two seagulls sheltering outside on the exterior gallery rail. Moody maritime realism, fine 35mm film grain, slate-blue dusk palette with a single warm lantern glow. SFX: boots on iron, one far roll of thunder. Ambient noise: wind rising around the tower, gulls outside the glass.</pre>
+</section>
+
+<section>
+  <h2>SHOT 2 · Three Drops <small>7s → use 8s · Frames-to-Video</small></h2>
+  <button onclick="copyIt(this)">📋 copy motion prompt (official format)</button>
+  <pre>Locked-off medium close-up over the workbench, shallow depth of field. The keeper threads a new wick, sets it, then tips the brass oil can and gives the mechanism exactly three slow drops, each drop catching the lantern light as it falls. The wick darkens as the oil takes. His hands are sure and unhurried. One continuous take. Warm lantern key light against cool storm dusk, fine film grain. SFX: one scissor snip, three soft oil drips. Ambient noise: the first rain reaching the glass.</pre>
+</section>
+
+<section>
+  <h2>SHOT 3 · First Light <small>8s · Frames-to-Video</small></h2>
+  <button onclick="copyIt(this)">📋 copy motion prompt (official format)</button>
+  <pre>Locked-off wide shot, deep enough focus to hold the keeper and the great lens. He touches a slender lit taper to the wick and the lens wakes: rings of warm light sweep across the room and out into the rain as he steps back and simply watches it turn. The sweeping beam drags slow turning shadows across the iron floor. One continuous take. The lamp becomes the sun of the room; far lightning answers out at sea. Fine film grain, slate-blue dusk broken by golden lamplight. SFX: a soft flare as the wick takes, a low whoomp, the beam's steady hum. Ambient noise: heavy rain on the panes, a foghorn far below.</pre>
+</section>
+
+<section>
+  <h2>SHOT 4 · Insert — The Seam <small>4s · Frames-to-Video</small></h2>
+  <button onclick="copyIt(this)">📋 copy motion prompt (official format)</button>
+  <pre>Locked-off extreme close-up on a macro lens, paper-thin focus. The weathered hand slides a cotton rag very slowly along the intact glass prism; fine dust lifts off into the beam, the cloth leaves a clean bright arc through the dust film, and the hairline seam inside the solid glass fills with swimming golden light as it passes. One continuous take. The lit lamp glows warm behind the glass. Fine film grain. SFX: soft cloth on glass. Ambient noise: the lamp's steady hum, rain muffled behind the lens.</pre>
+</section>
+
+<section>
+  <h2>BONUS · Scenebuilder verbs <small>for continuing the film</small></h2>
+  <p class="note">EXTEND (continues a clip — describe only how the action continues):</p>
+  <button onclick="copyIt(this)">📋 copy Extend prompt</button>
+  <pre>He keeps watching the turning beam, then reaches out and rests one hand flat on the warm brass base of the lamp. SFX: the beam's steady hum. Ambient noise: rain easing slightly.</pre>
+  <p class="note">JUMP TO (new setting, same character preserved):</p>
+  <button onclick="copyIt(this)">📋 copy Jump To prompt</button>
+  <pre>The keeper now stands outside on the iron gallery in the rain, gripping the rail, lit from behind by the sweeping beam, watching the storm over the dark sea. SFX: full wind and rain. Ambient noise: the foghorn, waves far below.</pre>
+</section>
+
+<script>
+function copyIt(btn){
+  const txt=btn.nextElementSibling.textContent;
+  navigator.clipboard.writeText(txt).then(()=>{
+    const old=btn.textContent;btn.textContent='✓ COPIED';
+    setTimeout(()=>btn.textContent=old,1600);
+  });
+}
+</script>
+</body>
+</html>

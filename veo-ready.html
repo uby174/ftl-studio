@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Veo-Ready — Howdy Cowboy Yoda</title>
+<style>
+  body{background:#0b0e14;color:#e8ecf4;font-family:'Segoe UI',system-ui,sans-serif;
+    max-width:860px;margin:0 auto;padding:30px 20px 80px;line-height:1.5}
+  h1{font-size:24px;text-align:center}
+  h1 span{color:#e8b64c}
+  p.lead{color:#8b96ad;font-size:14px;text-align:center;margin:8px 0 10px}
+  section{background:#121722;border:1px solid #2a3348;border-radius:12px;
+    padding:16px 18px;margin-top:22px}
+  h2{font-size:16px}
+  h2 small{color:#8b96ad;font-weight:400;margin-left:8px}
+  button{display:block;width:100%;background:#e8b64c;color:#161006;border:none;
+    border-radius:8px;padding:14px;font-size:16px;font-weight:700;cursor:pointer;
+    margin:12px 0}
+  button:hover{filter:brightness(1.1)}
+  pre{white-space:pre-wrap;font-family:Consolas,monospace;font-size:11px;color:#9aa7bd;
+    background:#0f1420;border:1px solid #2a3348;border-radius:8px;padding:12px;
+    max-height:220px;overflow:auto}
+</style>
+</head>
+<body>
+<h1>Veo-Ready · <span>Howdy Cowboy Yoda</span></h1>
+<p class="lead">One shot = one Veo generation. Click a button, paste into Veo's prompt box, generate. Run the shots in order — the frozen character paragraph keeps him identical across all of them.</p>
+
+  <section>
+    <h2>SHOT 1 · Entrance <small>8s</small></h2>
+    <button onclick="copyIt(this)">📋 COPY SHOT 1 — paste into Veo</button>
+    <pre>=== FTL-1 KEY (how to read the program below) ===
+You are reading FTL-1, the Funnel-Tree Language: a compressed program
+describing one video. Decode it with these rules:
+1. SEED:: is the concept in plain words.
+2. LAW:: sets authority between element types:
+   ID(identity) &gt; AR(archetype) &gt; MO(mood) &gt; WO(world) &gt; DE(scene).
+   If two elements ever disagree, obey the higher one and adapt the lower.
+3. NODE blocks each describe one element. Their six keys mean:
+   form=shape/anatomy  mat=surface/texture  mot=how it moves
+   lit=how light behaves on it  snd=the sound it makes  phy=physics acting on it.
+4. RESOLVE:: lines (A (x) B -&gt; C) are pre-decided conflicts: always apply C.
+5. FREEZE blocks are canon. $BIBLE = the character exactly as written,
+   $WORLD = the location exactly as written. Expand them in full wherever
+   referenced. Never reinterpret, restyle, or abbreviate them.
+6. SHOT blocks are renderable clips:
+   cam()=camera+lens  act{}=action  lit()=lighting  aud{}=all audio
+   anc()=continuity element carried from the previous shot  sty{}=film style.
+7. Render ONLY the shot named on the RENDER:: line, as one continuous
+   photorealistic cinematic clip. Everything not in that shot is context.
+=== END KEY ===
+
+=== FTL-1Q ADDENDUM (cinema-grade quality laws) ===
+13. LOOK { } is a frozen craft block -- the film's photographic DNA. Its keys
+    (dof, grain, palette, light-source, camera-speed) apply to EVERY shot,
+    on top of that shot's sty{}.
+14. QUALITY LAWS -- obey in every shot:
+    - ONE small, precise physical action per shot; hands, faces, and props
+      do the acting. Small exact motion renders masterfully; big motion breaks.
+    - Every lit() names the physical light source inside the scene (window,
+      doorway, lamp, fire, suns). Never unmotivated light.
+    - Shallow depth of field by default: one sharp subject plane, creamy
+      falloff. Deep focus only when a shot explicitly asks.
+    - The camera moves slowly or not at all; the subject supplies the motion.
+    - Every surface carries age: wear, dust, patina, scratches, skin texture.
+15. Every sequence contains at least one INSERT shot -- an extreme close-up
+    of hands, a prop, or a material detail on a macro lens. It is the film's
+    most tactile moment.
+=== END ADDENDUM ===
+
+@FTL-1
+SEED:: "a howdy cowboy Yoda from Star Wars"
+LAW::  ID &gt; AR &gt; MO &gt; WO &gt; DE
+
+NODE yoda [ID]
+  form: 66cm elderly alien; oversized head; large pointed drooping ears;
+        wispy white hair; deep wrinkles; heavy-lidded knowing eyes;
+        three-fingered hands; three-toed feet; cane in left hand
+  mat:  matte green wrinkled skin, subtle subsurface glow; papery around eyes
+  mot:  slow, deliberate, weight of 900 years; uncanny speed only via the Force
+  lit:  ears translucent when backlit -- always rim-light them
+  snd:  gravelly breathy voice, inverted syntax, soft "hmm"
+  phy:  light body -- dust barely stirs at his steps; robe hems drag
+
+NODE cowboy [AR]
+  form: duster coat, wide-brim hat, gun-belt slung low -- all child-scale
+  mat:  weathered brown leather; sun-bleached tan felt; trail dust in creases
+  mot:  saloon-door push, hat tip, unhurried amble
+  snd:  belt jingle, leather creak, boardwalk knock
+  phy:  duster sways with steps; brim flexes in wind; dust kicks at heels
+
+NODE howdy [MO]
+  mot:  two clawed fingers rise to the brim, slow tip, faint smile
+  snd:  drawled "Howdy, hmm... partners, you are." -- the room falls quiet
+  lit:  warm welcoming key on the face at the moment of greeting
+
+NODE starwars [WO]
+  form: used-future frontier: moisture vaporators, droid sweeping a boardwalk
+  lit:  twin suns = double shadows; warm tungsten interiors vs hard white exteriors
+  snd:  wind, vaporator hum; a low mystical hum when the Force is used
+  phy:  fine dust everywhere; objects float only when the Force acts
+
+NODE scene [DE]
+  form: saloon on a frontier main street; doorway = hard light blade into dark room
+  mot:  arc across shots: enter -&gt; greet -&gt; force-draw a mug
+
+RESOLVE:: human cowboy scale (x) yoda.form -&gt; tailor wardrobe child-scale, notch hat brim for the ears
+RESOLVE:: leather boots (x) three-toed feet -&gt; open-toed leather boot-wraps
+RESOLVE:: 1870s Earth west (x) starwars -&gt; Tatooine-like frontier town, twin suns
+RESOLVE:: quick friendly wave (x) yoda.mot -&gt; slow two-finger brim tip
+
+FREEZE $BIBLE { Yoda, the small elderly green-skinned alien Jedi Master, 66 cm tall,
+  with large pointed drooping ears, wispy white hair, deep wrinkles, and heavy-lidded
+  knowing eyes, dressed as a frontier cowboy: a child-scale weathered brown leather
+  duster over cream Jedi under-robes, a sun-bleached tan cowboy hat with the brim
+  notched around his ears, a hand-tooled gun-belt holstering his lightsaber like a
+  six-shooter, and open-toed leather boot-wraps over three-toed feet. He moves slowly
+  and deliberately, with the weight of 900 years, cane in left hand. }
+
+FREEZE $WORLD { A sun-scorched frontier main street on a Tatooine-like desert world:
+  sand-drifted wooden boardwalks, a saloon with swinging doors, moisture vaporators
+  turning like windmills, twin suns hanging low, heat-haze shimmering, fine dust
+  rolling in the wind. Lived-in used-future western. }
+
+LOOK {
+  dof: shallow, f1.8-2.8, one sharp subject plane, creamy falloff
+  grain: fine 35mm, gentle halation on bright highlights
+  palette: sun-bleached amber, dust-tan, worn leather brown; deep teal shadows
+  light-source: every shot lit by a nameable source -- twin suns, doorway blade, oil lamps
+  camera-speed: slow or locked; the world moves, the camera barely does
+}
+
+SHOT 1 "Entrance" [8s]
+  cam(slow dolly-in, 35mm anamorphic, low angle)
+  act{ $BIBLE pushes through the saloon's swinging doors, pauses silhouetted
+       in the doorway, then steps into the light. $WORLD }
+  lit(golden-hour twin-sun backlight, long double shadows, volumetric dust)
+  aud{ door creak, belt jingle, wind; the saloon piano stops mid-note }
+  sty{ gritty spaghetti-western grain, Kodak 2383 warmth }
+
+SHOT 2 "Howdy" [6s]  anc(doorway light &lt;- SHOT 1)
+  cam(medium close-up, 50mm, eye-level with the tiny figure)
+  act{ $BIBLE looks up from under the brim, tips it slowly with two clawed
+       fingers and drawls: "Howdy, hmm... partners, you are." Faint smile.
+       $WORLD :saloon-interior }
+  lit(key light from the doorway behind, shallow depth of field)
+  aud{ his gravelly line, hat leather creak, murmur dying out }
+  sty{ same stock }
+
+SHOT 3 "Force Draw" [7s]  anc(gun-belt &lt;- SHOT 2)
+  cam(wide, 24mm, dust at boot level, slow lateral track right)
+  act{ a mug slides down the bar; without looking $BIBLE raises his right
+       hand -- the mug floats gently into his grip; he sips.
+       $WORLD :saloon-interior }
+  lit(warm tungsten interior vs hard white doorway light)
+  aud{ low mystical hum, wooden slide of the mug, one piano note resumes }
+  sty{ same stock }
+
+SHOT 4 "Insert -- The Brim" [5s]  anc(hat &lt;- SHOT 2)
+  cam(macro insert, 100mm, extreme close-up, razor-thin focus, locked off)
+  act{ two wrinkled green three-knuckled fingers, every crease and old scar
+       sharp, slide slowly along the sun-bleached felt brim of the notched
+       cowboy hat -- fine dust lifts off the fibers into the light as the
+       brim dips a few millimeters }
+  lit(hard doorway backlight rims the fingers; the felt fibers glow at the edge)
+  aud{ soft felt rasp under the fingertips, one slow breath, room silence }
+  sty{ same stock }
+
+RENDER:: SHOT 1</pre>
+  </section>
+
+  <section>
+    <h2>SHOT 2 · Howdy <small>6s</small></h2>
+    <button onclick="copyIt(this)">📋 COPY SHOT 2 — paste into Veo</button>
+    <pre>=== FTL-1 KEY (how to read the program below) ===
+You are reading FTL-1, the Funnel-Tree Language: a compressed program
+describing one video. Decode it with these rules:
+1. SEED:: is the concept in plain words.
+2. LAW:: sets authority between element types:
+   ID(identity) &gt; AR(archetype) &gt; MO(mood) &gt; WO(world) &gt; DE(scene).
+   If two elements ever disagree, obey the higher one and adapt the lower.
+3. NODE blocks each describe one element. Their six keys mean:
+   form=shape/anatomy  mat=surface/texture  mot=how it moves
+   lit=how light behaves on it  snd=the sound it makes  phy=physics acting on it.
+4. RESOLVE:: lines (A (x) B -&gt; C) are pre-decided conflicts: always apply C.
+5. FREEZE blocks are canon. $BIBLE = the character exactly as written,
+   $WORLD = the location exactly as written. Expand them in full wherever
+   referenced. Never reinterpret, restyle, or abbreviate them.
+6. SHOT blocks are renderable clips:
+   cam()=camera+lens  act{}=action  lit()=lighting  aud{}=all audio
+   anc()=continuity element carried from the previous shot  sty{}=film style.
+7. Render ONLY the shot named on the RENDER:: line, as one continuous
+   photorealistic cinematic clip. Everything not in that shot is context.
+=== END KEY ===
+
+=== FTL-1Q ADDENDUM (cinema-grade quality laws) ===
+13. LOOK { } is a frozen craft block -- the film's photographic DNA. Its keys
+    (dof, grain, palette, light-source, camera-speed) apply to EVERY shot,
+    on top of that shot's sty{}.
+14. QUALITY LAWS -- obey in every shot:
+    - ONE small, precise physical action per shot; hands, faces, and props
+      do the acting. Small exact motion renders masterfully; big motion breaks.
+    - Every lit() names the physical light source inside the scene (window,
+      doorway, lamp, fire, suns). Never unmotivated light.
+    - Shallow depth of field by default: one sharp subject plane, creamy
+      falloff. Deep focus only when a shot explicitly asks.
+    - The camera moves slowly or not at all; the subject supplies the motion.
+    - Every surface carries age: wear, dust, patina, scratches, skin texture.
+15. Every sequence contains at least one INSERT shot -- an extreme close-up
+    of hands, a prop, or a material detail on a macro lens. It is the film's
+    most tactile moment.
+=== END ADDENDUM ===
+
+@FTL-1
+SEED:: "a howdy cowboy Yoda from Star Wars"
+LAW::  ID &gt; AR &gt; MO &gt; WO &gt; DE
+
+NODE yoda [ID]
+  form: 66cm elderly alien; oversized head; large pointed drooping ears;
+        wispy white hair; deep wrinkles; heavy-lidded knowing eyes;
+        three-fingered hands; three-toed feet; cane in left hand
+  mat:  matte green wrinkled skin, subtle subsurface glow; papery around eyes
+  mot:  slow, deliberate, weight of 900 years; uncanny speed only via the Force
+  lit:  ears translucent when backlit -- always rim-light them
+  snd:  gravelly breathy voice, inverted syntax, soft "hmm"
+  phy:  light body -- dust barely stirs at his steps; robe hems drag
+
+NODE cowboy [AR]
+  form: duster coat, wide-brim hat, gun-belt slung low -- all child-scale
+  mat:  weathered brown leather; sun-bleached tan felt; trail dust in creases
+  mot:  saloon-door push, hat tip, unhurried amble
+  snd:  belt jingle, leather creak, boardwalk knock
+  phy:  duster sways with steps; brim flexes in wind; dust kicks at heels
+
+NODE howdy [MO]
+  mot:  two clawed fingers rise to the brim, slow tip, faint smile
+  snd:  drawled "Howdy, hmm... partners, you are." -- the room falls quiet
+  lit:  warm welcoming key on the face at the moment of greeting
+
+NODE starwars [WO]
+  form: used-future frontier: moisture vaporators, droid sweeping a boardwalk
+  lit:  twin suns = double shadows; warm tungsten interiors vs hard white exteriors
+  snd:  wind, vaporator hum; a low mystical hum when the Force is used
+  phy:  fine dust everywhere; objects float only when the Force acts
+
+NODE scene [DE]
+  form: saloon on a frontier main street; doorway = hard light blade into dark room
+  mot:  arc across shots: enter -&gt; greet -&gt; force-draw a mug
+
+RESOLVE:: human cowboy scale (x) yoda.form -&gt; tailor wardrobe child-scale, notch hat brim for the ears
+RESOLVE:: leather boots (x) three-toed feet -&gt; open-toed leather boot-wraps
+RESOLVE:: 1870s Earth west (x) starwars -&gt; Tatooine-like frontier town, twin suns
+RESOLVE:: quick friendly wave (x) yoda.mot -&gt; slow two-finger brim tip
+
+FREEZE $BIBLE { Yoda, the small elderly green-skinned alien Jedi Master, 66 cm tall,
+  with large pointed drooping ears, wispy white hair, deep wrinkles, and heavy-lidded
+  knowing eyes, dressed as a frontier cowboy: a child-scale weathered brown leather
+  duster over cream Jedi under-robes, a sun-bleached tan cowboy hat with the brim
+  notched around his ears, a hand-tooled gun-belt holstering his lightsaber like a
+  six-shooter, and open-toed leather boot-wraps over three-toed feet. He moves slowly
+  and deliberately, with the weight of 900 years, cane in left hand. }
+
+FREEZE $WORLD { A sun-scorched frontier main street on a Tatooine-like desert world:
+  sand-drifted wooden boardwalks, a saloon with swinging doors, moisture vaporators
+  turning like windmills, twin suns hanging low, heat-haze shimmering, fine dust
+  rolling in the wind. Lived-in used-future western. }
+
+LOOK {
+  dof: shallow, f1.8-2.8, one sharp subject plane, creamy falloff
+  grain: fine 35mm, gentle halation on bright highlights
+  palette: sun-bleached amber, dust-tan, worn leather brown; deep teal shadows
+  light-source: every shot lit by a nameable source -- twin suns, doorway blade, oil lamps
+  camera-speed: slow or locked; the world moves, the camera barely does
+}
+
+SHOT 1 "Entrance" [8s]
+  cam(slow dolly-in, 35mm anamorphic, low angle)
+  act{ $BIBLE pushes through the saloon's swinging doors, pauses silhouetted
+       in the doorway, then steps into the light. $WORLD }
+  lit(golden-hour twin-sun backlight, long double shadows, volumetric dust)
+  aud{ door creak, belt jingle, wind; the saloon piano stops mid-note }
+  sty{ gritty spaghetti-western grain, Kodak 2383 warmth }
+
+SHOT 2 "Howdy" [6s]  anc(doorway light &lt;- SHOT 1)
+  cam(medium close-up, 50mm, eye-level with the tiny figure)
+  act{ $BIBLE looks up from under the brim, tips it slowly with two clawed
+       fingers and drawls: "Howdy, hmm... partners, you are." Faint smile.
+       $WORLD :saloon-interior }
+  lit(key light from the doorway behind, shallow depth of field)
+  aud{ his gravelly line, hat leather creak, murmur dying out }
+  sty{ same stock }
+
+SHOT 3 "Force Draw" [7s]  anc(gun-belt &lt;- SHOT 2)
+  cam(wide, 24mm, dust at boot level, slow lateral track right)
+  act{ a mug slides down the bar; without looking $BIBLE raises his right
+       hand -- the mug floats gently into his grip; he sips.
+       $WORLD :saloon-interior }
+  lit(warm tungsten interior vs hard white doorway light)
+  aud{ low mystical hum, wooden slide of the mug, one piano note resumes }
+  sty{ same stock }
+
+SHOT 4 "Insert -- The Brim" [5s]  anc(hat &lt;- SHOT 2)
+  cam(macro insert, 100mm, extreme close-up, razor-thin focus, locked off)
+  act{ two wrinkled green three-knuckled fingers, every crease and old scar
+       sharp, slide slowly along the sun-bleached felt brim of the notched
+       cowboy hat -- fine dust lifts off the fibers into the light as the
+       brim dips a few millimeters }
+  lit(hard doorway backlight rims the fingers; the felt fibers glow at the edge)
+  aud{ soft felt rasp under the fingertips, one slow breath, room silence }
+  sty{ same stock }
+
+RENDER:: SHOT 2</pre>
+  </section>
+
+  <section>
+    <h2>SHOT 3 · Force Draw <small>7s</small></h2>
+    <button onclick="copyIt(this)">📋 COPY SHOT 3 — paste into Veo</button>
+    <pre>=== FTL-1 KEY (how to read the program below) ===
+You are reading FTL-1, the Funnel-Tree Language: a compressed program
+describing one video. Decode it with these rules:
+1. SEED:: is the concept in plain words.
+2. LAW:: sets authority between element types:
+   ID(identity) &gt; AR(archetype) &gt; MO(mood) &gt; WO(world) &gt; DE(scene).
+   If two elements ever disagree, obey the higher one and adapt the lower.
+3. NODE blocks each describe one element. Their six keys mean:
+   form=shape/anatomy  mat=surface/texture  mot=how it moves
+   lit=how light behaves on it  snd=the sound it makes  phy=physics acting on it.
+4. RESOLVE:: lines (A (x) B -&gt; C) are pre-decided conflicts: always apply C.
+5. FREEZE blocks are canon. $BIBLE = the character exactly as written,
+   $WORLD = the location exactly as written. Expand them in full wherever
+   referenced. Never reinterpret, restyle, or abbreviate them.
+6. SHOT blocks are renderable clips:
+   cam()=camera+lens  act{}=action  lit()=lighting  aud{}=all audio
+   anc()=continuity element carried from the previous shot  sty{}=film style.
+7. Render ONLY the shot named on the RENDER:: line, as one continuous
+   photorealistic cinematic clip. Everything not in that shot is context.
+=== END KEY ===
+
+=== FTL-1Q ADDENDUM (cinema-grade quality laws) ===
+13. LOOK { } is a frozen craft block -- the film's photographic DNA. Its keys
+    (dof, grain, palette, light-source, camera-speed) apply to EVERY shot,
+    on top of that shot's sty{}.
+14. QUALITY LAWS -- obey in every shot:
+    - ONE small, precise physical action per shot; hands, faces, and props
+      do the acting. Small exact motion renders masterfully; big motion breaks.
+    - Every lit() names the physical light source inside the scene (window,
+      doorway, lamp, fire, suns). Never unmotivated light.
+    - Shallow depth of field by default: one sharp subject plane, creamy
+      falloff. Deep focus only when a shot explicitly asks.
+    - The camera moves slowly or not at all; the subject supplies the motion.
+    - Every surface carries age: wear, dust, patina, scratches, skin texture.
+15. Every sequence contains at least one INSERT shot -- an extreme close-up
+    of hands, a prop, or a material detail on a macro lens. It is the film's
+    most tactile moment.
+=== END ADDENDUM ===
+
+@FTL-1
+SEED:: "a howdy cowboy Yoda from Star Wars"
+LAW::  ID &gt; AR &gt; MO &gt; WO &gt; DE
+
+NODE yoda [ID]
+  form: 66cm elderly alien; oversized head; large pointed drooping ears;
+        wispy white hair; deep wrinkles; heavy-lidded knowing eyes;
+        three-fingered hands; three-toed feet; cane in left hand
+  mat:  matte green wrinkled skin, subtle subsurface glow; papery around eyes
+  mot:  slow, deliberate, weight of 900 years; uncanny speed only via the Force
+  lit:  ears translucent when backlit -- always rim-light them
+  snd:  gravelly breathy voice, inverted syntax, soft "hmm"
+  phy:  light body -- dust barely stirs at his steps; robe hems drag
+
+NODE cowboy [AR]
+  form: duster coat, wide-brim hat, gun-belt slung low -- all child-scale
+  mat:  weathered brown leather; sun-bleached tan felt; trail dust in creases
+  mot:  saloon-door push, hat tip, unhurried amble
+  snd:  belt jingle, leather creak, boardwalk knock
+  phy:  duster sways with steps; brim flexes in wind; dust kicks at heels
+
+NODE howdy [MO]
+  mot:  two clawed fingers rise to the brim, slow tip, faint smile
+  snd:  drawled "Howdy, hmm... partners, you are." -- the room falls quiet
+  lit:  warm welcoming key on the face at the moment of greeting
+
+NODE starwars [WO]
+  form: used-future frontier: moisture vaporators, droid sweeping a boardwalk
+  lit:  twin suns = double shadows; warm tungsten interiors vs hard white exteriors
+  snd:  wind, vaporator hum; a low mystical hum when the Force is used
+  phy:  fine dust everywhere; objects float only when the Force acts
+
+NODE scene [DE]
+  form: saloon on a frontier main street; doorway = hard light blade into dark room
+  mot:  arc across shots: enter -&gt; greet -&gt; force-draw a mug
+
+RESOLVE:: human cowboy scale (x) yoda.form -&gt; tailor wardrobe child-scale, notch hat brim for the ears
+RESOLVE:: leather boots (x) three-toed feet -&gt; open-toed leather boot-wraps
+RESOLVE:: 1870s Earth west (x) starwars -&gt; Tatooine-like frontier town, twin suns
+RESOLVE:: quick friendly wave (x) yoda.mot -&gt; slow two-finger brim tip
+
+FREEZE $BIBLE { Yoda, the small elderly green-skinned alien Jedi Master, 66 cm tall,
+  with large pointed drooping ears, wispy white hair, deep wrinkles, and heavy-lidded
+  knowing eyes, dressed as a frontier cowboy: a child-scale weathered brown leather
+  duster over cream Jedi under-robes, a sun-bleached tan cowboy hat with the brim
+  notched around his ears, a hand-tooled gun-belt holstering his lightsaber like a
+  six-shooter, and open-toed leather boot-wraps over three-toed feet. He moves slowly
+  and deliberately, with the weight of 900 years, cane in left hand. }
+
+FREEZE $WORLD { A sun-scorched frontier main street on a Tatooine-like desert world:
+  sand-drifted wooden boardwalks, a saloon with swinging doors, moisture vaporators
+  turning like windmills, twin suns hanging low, heat-haze shimmering, fine dust
+  rolling in the wind. Lived-in used-future western. }
+
+LOOK {
+  dof: shallow, f1.8-2.8, one sharp subject plane, creamy falloff
+  grain: fine 35mm, gentle halation on bright highlights
+  palette: sun-bleached amber, dust-tan, worn leather brown; deep teal shadows
+  light-source: every shot lit by a nameable source -- twin suns, doorway blade, oil lamps
+  camera-speed: slow or locked; the world moves, the camera barely does
+}
+
+SHOT 1 "Entrance" [8s]
+  cam(slow dolly-in, 35mm anamorphic, low angle)
+  act{ $BIBLE pushes through the saloon's swinging doors, pauses silhouetted
+       in the doorway, then steps into the light. $WORLD }
+  lit(golden-hour twin-sun backlight, long double shadows, volumetric dust)
+  aud{ door creak, belt jingle, wind; the saloon piano stops mid-note }
+  sty{ gritty spaghetti-western grain, Kodak 2383 warmth }
+
+SHOT 2 "Howdy" [6s]  anc(doorway light &lt;- SHOT 1)
+  cam(medium close-up, 50mm, eye-level with the tiny figure)
+  act{ $BIBLE looks up from under the brim, tips it slowly with two clawed
+       fingers and drawls: "Howdy, hmm... partners, you are." Faint smile.
+       $WORLD :saloon-interior }
+  lit(key light from the doorway behind, shallow depth of field)
+  aud{ his gravelly line, hat leather creak, murmur dying out }
+  sty{ same stock }
+
+SHOT 3 "Force Draw" [7s]  anc(gun-belt &lt;- SHOT 2)
+  cam(wide, 24mm, dust at boot level, slow lateral track right)
+  act{ a mug slides down the bar; without looking $BIBLE raises his right
+       hand -- the mug floats gently into his grip; he sips.
+       $WORLD :saloon-interior }
+  lit(warm tungsten interior vs hard white doorway light)
+  aud{ low mystical hum, wooden slide of the mug, one piano note resumes }
+  sty{ same stock }
+
+SHOT 4 "Insert -- The Brim" [5s]  anc(hat &lt;- SHOT 2)
+  cam(macro insert, 100mm, extreme close-up, razor-thin focus, locked off)
+  act{ two wrinkled green three-knuckled fingers, every crease and old scar
+       sharp, slide slowly along the sun-bleached felt brim of the notched
+       cowboy hat -- fine dust lifts off the fibers into the light as the
+       brim dips a few millimeters }
+  lit(hard doorway backlight rims the fingers; the felt fibers glow at the edge)
+  aud{ soft felt rasp under the fingertips, one slow breath, room silence }
+  sty{ same stock }
+
+RENDER:: SHOT 3</pre>
+  </section>
+
+  <section>
+    <h2>SHOT 4 · Insert -- The Brim <small>5s</small></h2>
+    <button onclick="copyIt(this)">📋 COPY SHOT 4 — paste into Veo</button>
+    <pre>=== FTL-1 KEY (how to read the program below) ===
+You are reading FTL-1, the Funnel-Tree Language: a compressed program
+describing one video. Decode it with these rules:
+1. SEED:: is the concept in plain words.
+2. LAW:: sets authority between element types:
+   ID(identity) &gt; AR(archetype) &gt; MO(mood) &gt; WO(world) &gt; DE(scene).
+   If two elements ever disagree, obey the higher one and adapt the lower.
+3. NODE blocks each describe one element. Their six keys mean:
+   form=shape/anatomy  mat=surface/texture  mot=how it moves
+   lit=how light behaves on it  snd=the sound it makes  phy=physics acting on it.
+4. RESOLVE:: lines (A (x) B -&gt; C) are pre-decided conflicts: always apply C.
+5. FREEZE blocks are canon. $BIBLE = the character exactly as written,
+   $WORLD = the location exactly as written. Expand them in full wherever
+   referenced. Never reinterpret, restyle, or abbreviate them.
+6. SHOT blocks are renderable clips:
+   cam()=camera+lens  act{}=action  lit()=lighting  aud{}=all audio
+   anc()=continuity element carried from the previous shot  sty{}=film style.
+7. Render ONLY the shot named on the RENDER:: line, as one continuous
+   photorealistic cinematic clip. Everything not in that shot is context.
+=== END KEY ===
+
+=== FTL-1Q ADDENDUM (cinema-grade quality laws) ===
+13. LOOK { } is a frozen craft block -- the film's photographic DNA. Its keys
+    (dof, grain, palette, light-source, camera-speed) apply to EVERY shot,
+    on top of that shot's sty{}.
+14. QUALITY LAWS -- obey in every shot:
+    - ONE small, precise physical action per shot; hands, faces, and props
+      do the acting. Small exact motion renders masterfully; big motion breaks.
+    - Every lit() names the physical light source inside the scene (window,
+      doorway, lamp, fire, suns). Never unmotivated light.
+    - Shallow depth of field by default: one sharp subject plane, creamy
+      falloff. Deep focus only when a shot explicitly asks.
+    - The camera moves slowly or not at all; the subject supplies the motion.
+    - Every surface carries age: wear, dust, patina, scratches, skin texture.
+15. Every sequence contains at least one INSERT shot -- an extreme close-up
+    of hands, a prop, or a material detail on a macro lens. It is the film's
+    most tactile moment.
+=== END ADDENDUM ===
+
+@FTL-1
+SEED:: "a howdy cowboy Yoda from Star Wars"
+LAW::  ID &gt; AR &gt; MO &gt; WO &gt; DE
+
+NODE yoda [ID]
+  form: 66cm elderly alien; oversized head; large pointed drooping ears;
+        wispy white hair; deep wrinkles; heavy-lidded knowing eyes;
+        three-fingered hands; three-toed feet; cane in left hand
+  mat:  matte green wrinkled skin, subtle subsurface glow; papery around eyes
+  mot:  slow, deliberate, weight of 900 years; uncanny speed only via the Force
+  lit:  ears translucent when backlit -- always rim-light them
+  snd:  gravelly breathy voice, inverted syntax, soft "hmm"
+  phy:  light body -- dust barely stirs at his steps; robe hems drag
+
+NODE cowboy [AR]
+  form: duster coat, wide-brim hat, gun-belt slung low -- all child-scale
+  mat:  weathered brown leather; sun-bleached tan felt; trail dust in creases
+  mot:  saloon-door push, hat tip, unhurried amble
+  snd:  belt jingle, leather creak, boardwalk knock
+  phy:  duster sways with steps; brim flexes in wind; dust kicks at heels
+
+NODE howdy [MO]
+  mot:  two clawed fingers rise to the brim, slow tip, faint smile
+  snd:  drawled "Howdy, hmm... partners, you are." -- the room falls quiet
+  lit:  warm welcoming key on the face at the moment of greeting
+
+NODE starwars [WO]
+  form: used-future frontier: moisture vaporators, droid sweeping a boardwalk
+  lit:  twin suns = double shadows; warm tungsten interiors vs hard white exteriors
+  snd:  wind, vaporator hum; a low mystical hum when the Force is used
+  phy:  fine dust everywhere; objects float only when the Force acts
+
+NODE scene [DE]
+  form: saloon on a frontier main street; doorway = hard light blade into dark room
+  mot:  arc across shots: enter -&gt; greet -&gt; force-draw a mug
+
+RESOLVE:: human cowboy scale (x) yoda.form -&gt; tailor wardrobe child-scale, notch hat brim for the ears
+RESOLVE:: leather boots (x) three-toed feet -&gt; open-toed leather boot-wraps
+RESOLVE:: 1870s Earth west (x) starwars -&gt; Tatooine-like frontier town, twin suns
+RESOLVE:: quick friendly wave (x) yoda.mot -&gt; slow two-finger brim tip
+
+FREEZE $BIBLE { Yoda, the small elderly green-skinned alien Jedi Master, 66 cm tall,
+  with large pointed drooping ears, wispy white hair, deep wrinkles, and heavy-lidded
+  knowing eyes, dressed as a frontier cowboy: a child-scale weathered brown leather
+  duster over cream Jedi under-robes, a sun-bleached tan cowboy hat with the brim
+  notched around his ears, a hand-tooled gun-belt holstering his lightsaber like a
+  six-shooter, and open-toed leather boot-wraps over three-toed feet. He moves slowly
+  and deliberately, with the weight of 900 years, cane in left hand. }
+
+FREEZE $WORLD { A sun-scorched frontier main street on a Tatooine-like desert world:
+  sand-drifted wooden boardwalks, a saloon with swinging doors, moisture vaporators
+  turning like windmills, twin suns hanging low, heat-haze shimmering, fine dust
+  rolling in the wind. Lived-in used-future western. }
+
+LOOK {
+  dof: shallow, f1.8-2.8, one sharp subject plane, creamy falloff
+  grain: fine 35mm, gentle halation on bright highlights
+  palette: sun-bleached amber, dust-tan, worn leather brown; deep teal shadows
+  light-source: every shot lit by a nameable source -- twin suns, doorway blade, oil lamps
+  camera-speed: slow or locked; the world moves, the camera barely does
+}
+
+SHOT 1 "Entrance" [8s]
+  cam(slow dolly-in, 35mm anamorphic, low angle)
+  act{ $BIBLE pushes through the saloon's swinging doors, pauses silhouetted
+       in the doorway, then steps into the light. $WORLD }
+  lit(golden-hour twin-sun backlight, long double shadows, volumetric dust)
+  aud{ door creak, belt jingle, wind; the saloon piano stops mid-note }
+  sty{ gritty spaghetti-western grain, Kodak 2383 warmth }
+
+SHOT 2 "Howdy" [6s]  anc(doorway light &lt;- SHOT 1)
+  cam(medium close-up, 50mm, eye-level with the tiny figure)
+  act{ $BIBLE looks up from under the brim, tips it slowly with two clawed
+       fingers and drawls: "Howdy, hmm... partners, you are." Faint smile.
+       $WORLD :saloon-interior }
+  lit(key light from the doorway behind, shallow depth of field)
+  aud{ his gravelly line, hat leather creak, murmur dying out }
+  sty{ same stock }
+
+SHOT 3 "Force Draw" [7s]  anc(gun-belt &lt;- SHOT 2)
+  cam(wide, 24mm, dust at boot level, slow lateral track right)
+  act{ a mug slides down the bar; without looking $BIBLE raises his right
+       hand -- the mug floats gently into his grip; he sips.
+       $WORLD :saloon-interior }
+  lit(warm tungsten interior vs hard white doorway light)
+  aud{ low mystical hum, wooden slide of the mug, one piano note resumes }
+  sty{ same stock }
+
+SHOT 4 "Insert -- The Brim" [5s]  anc(hat &lt;- SHOT 2)
+  cam(macro insert, 100mm, extreme close-up, razor-thin focus, locked off)
+  act{ two wrinkled green three-knuckled fingers, every crease and old scar
+       sharp, slide slowly along the sun-bleached felt brim of the notched
+       cowboy hat -- fine dust lifts off the fibers into the light as the
+       brim dips a few millimeters }
+  lit(hard doorway backlight rims the fingers; the felt fibers glow at the edge)
+  aud{ soft felt rasp under the fingertips, one slow breath, room silence }
+  sty{ same stock }
+
+RENDER:: SHOT 4</pre>
+  </section>
+<script>
+function copyIt(btn){
+  const txt=btn.nextElementSibling.textContent;
+  navigator.clipboard.writeText(txt).then(()=>{
+    const old=btn.textContent;btn.textContent='✓ COPIED — now paste into Veo';
+    setTimeout(()=>btn.textContent=old,2000);
+  });
+}
+</script>
+</body>
+</html>
