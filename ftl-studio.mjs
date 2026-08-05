@@ -70,11 +70,18 @@ wins), then emit the plan.
 HARD RULES:
 - Fully original content only. If the description names copyrighted characters or
   franchises, replace them with visually equivalent original characters.
-- characterStill: a photorealistic portrait prompt with a FACE-LOCK — 4-6 distinctive
-  invariant facial anchors (scar, nose shape, brow, hair) + full wardrobe with "wears
-  all of" phrasing + mood lighting. The character centered. ~110 words.
-- setStill: a photorealistic location prompt with ONE distinctive centerpiece object,
-  time-of-day lock, weather, textures of age, one named light source. ~110 words.
+- characterStill: a photorealistic portrait prompt written as a STRUCTURED SPEC,
+  not prose — labeled lines, each carrying sub-branch micro-details:
+  SUBJECT: ... / FACE: (face-lock — 4-6 invariant anchors: scar, nose, brow, hair,
+  each with its micro-detail) / HANDS: ... / WARDROBE: item-by-item, each with its
+  fastenings and wear marks, "wears all of" phrasing / GEAR: each strap and buckle /
+  LIGHT: named motivated sources / PALETTE + GRAIN: ...
+  The character centered. End with: "Photorealistic. No text, no watermark, no border."
+- setStill: a photorealistic location prompt as the same STRUCTURED SPEC:
+  CENTERPIECE: the one distinctive object, part by part / SURFACES: each material
+  with its age marks / LIGHT-SOURCES: each housing and glow behavior / WEATHER +
+  TIME: locked / PALETTE + GRAIN: identical to characterStill.
+  End with: "Photorealistic. No text, no watermark, no border."
 - Both stills share one photographic DNA: shallow depth of field, fine 35mm film
   grain, motivated light from nameable sources, a locked palette. Bake it into both.
 - BEATS AND COVERAGE: the requested count is NARRATIVE BEATS. Each beat compiles
@@ -500,7 +507,7 @@ export async function makeFilm(cfg, opts) {
       if (fs.existsSync(prevFrame)) { refs.push(prevFrame); chainNote = ` The ${refs.length === 3 ? 'third' : 'second'} image is a frame already filmed from this same movie: keep the room, the lamp design, its geometry and its state of light EXACTLY as they appear there — this shot happens moments later in the same place.`; }
       const framePrompt = (note) => s.noCharacter
         ? `The first image is the room. Create one new photorealistic 16:9 widescreen cinematic film still of this exact room, keeping the lamp design, materials and lighting identical to the reference. The lamp in the reference is the ONLY lamp design in this film — reproduce it exactly.${note} This is a POV frame from a movie — what a person standing in the room sees. Nobody is in frame. Full-bleed widescreen, zero black bars or borders. Composition: ${s.firstFrame}`
-        : `The first image is the man. The second image is the room. Create one new photorealistic 16:9 widescreen cinematic film still of this exact man inside this exact room, keeping his face, his exact clothing with nothing added or removed, the room's lamp design and lighting identical to the references. The lamp in the room reference is the ONLY lamp design in this film — reproduce it exactly.${note} This is a candid frame from a movie: he is mid-action with his eyes on his work, never looking at the camera, placed off-center with foreground depth. Full-bleed widescreen, zero black bars or borders. Composition: ${s.firstFrame}`;
+        : `The first image is the man. The second image is the room. Create one new photorealistic 16:9 widescreen cinematic film still of this exact man inside this exact room. Crucially, the man's facial features, hair, and unique identity must match the first reference image exactly, and his clothing must match with nothing added or removed. Keep the room's lamp design and lighting identical to the references. The lamp in the room reference is the ONLY lamp design in this film — reproduce it exactly.${note} This is a candid frame from a movie: he is mid-action with his eyes on his work, never looking at the camera, placed off-center with foreground depth. Full-bleed widescreen, zero black bars or borders. Composition: ${s.firstFrame}`;
       // progressive reference fallback: full chain -> canon only -> set only
       const attempts = [[refs, chainNote]];
       if (refs.length > baseRefs.length) attempts.push([baseRefs, '']);
@@ -533,7 +540,7 @@ export async function makeFilm(cfg, opts) {
     log(`shot ${s.n} "${s.title}" — Veo ${s.seconds}s (${cfg.models.video}) …`);
     emit('video', s);
     try {
-      const motion = `${s.motion} The action is already underway when the shot begins and is still in motion when it ends — natural continuous human movement with real weight, breath and slight imperfection, no held pose, no freeze. Physical persistence: every object keeps its exact place, shape and state for the whole shot unless this action moves it; light sources hold constant intensity; the same items that are in frame at the start are in frame at the end.`;
+      const motion = `${s.motion} This is a living photograph: micro-motion everywhere (breath, cloth stirring, flame flicker, drifting dust), macro-motion only in the single described action. The action is already underway when the shot begins and is still in motion when it ends — natural continuous human movement with real weight, breath and slight imperfection, no held pose, no freeze. Physical persistence: every object keeps its exact place, shape and state for the whole shot unless this action moves it; light sources hold constant intensity; the same items that are in frame at the start are in frame at the end.`;
       await genVideo(cfg, motion, framePath, s.seconds, clipPath);
       console.log('');
       ok(`shot${s.n}.mp4`);
