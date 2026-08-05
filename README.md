@@ -96,6 +96,8 @@ be made, and we're putting the whole architecture in the open to push it:
 - **Extend it** — adapters for Sora, Kling, Runway; new compiler verticals (ads, product demos, music video) are one system-prompt away (`INTEGRATION.md`).
 - **Challenge it** — the laws in `ARCHITECTURE.md` were learned from failures; break them, prove better ones, PR them.
 
+**Start here:** [CONTRIBUTING.md](CONTRIBUTING.md) · open a [Discussion](../../discussions) · grab a [help-wanted issue](../../issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22)
+
 MIT licensed. Built through a long day of real failures — copyright walls,
 drifting faces, policy filters, pillarboxed frames — every one of which is now
 a rule the compiler enforces so you don't have to learn it again.
