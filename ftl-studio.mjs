@@ -124,6 +124,15 @@ Bake the resulting micro-details INTO characterStill and setStill prose — the
 stills are where sub-branches live. A detail not written down is a detail the
 model will invent differently every time.
 
+MULTI-AGE / SECOND CHARACTER (aging stories, flashbacks): the canon character
+reference is ONE life stage — the one with the most screen time. A shot showing
+another life stage (the same person younger/older) or a second person sets
+"altCharacter" to a full structured mini-spec of that person (face, hair, build,
+wardrobe item-by-item), REUSED VERBATIM in every shot where they appear, and
+anchored to canon by 2-3 inherited features (same eye color, same cowlick, the
+scar he will get). Shots with altCharacter set leave the canon man out of frame
+unless both appear. altCharacter is "" when unused.
+
 CLOSED-WORLD MANIFEST (absolute, per shot): every firstFrame ENDS with a
 sentence beginning "In frame: " listing EVERY object visible in that frame with
 its current state (e.g. "In frame: the keeper kneeling, the unrolled leather
@@ -197,8 +206,9 @@ export async function compileFilm(cfg, seed, nShots) {
                     firstFrame: { type: 'string' },
                     motion: { type: 'string' },
                     noCharacter: { type: 'boolean' },
+                    altCharacter: { type: 'string' },
                   },
-                  required: ['n', 'title', 'seconds', 'firstFrame', 'motion', 'noCharacter'],
+                  required: ['n', 'title', 'seconds', 'firstFrame', 'motion', 'noCharacter', 'altCharacter'],
                   additionalProperties: false,
                 },
               },
@@ -498,14 +508,17 @@ export async function makeFilm(cfg, opts) {
     if (onlyShot && String(s.n) !== String(onlyShot)) continue;
     const framePath = path.join(dir, `shot${s.n}_frame.png`);
     if (!fs.existsSync(framePath) || redoStills) {
-      log(`shot ${s.n} "${s.title}" — first frame${s.noCharacter ? ' (POV, no character)' : ''} …`);
+      const alt = (s.altCharacter || '').trim();
+      log(`shot ${s.n} "${s.title}" — first frame${s.noCharacter ? ' (POV, no character)' : alt ? ' (alt character)' : ''} …`);
       // frame chaining: previous shot's frame locks the set geometry for this one
       const prevFrame = path.join(dir, `shot${s.n - 1}_frame.png`);
-      const baseRefs = s.noCharacter ? [setPath] : [charPath, setPath];
+      const baseRefs = (s.noCharacter || alt) ? [setPath] : [charPath, setPath];
       const refs = [...baseRefs];
       let chainNote = '';
       if (fs.existsSync(prevFrame)) { refs.push(prevFrame); chainNote = ` The ${refs.length === 3 ? 'third' : 'second'} image is a frame already filmed from this same movie: keep the room, the lamp design, its geometry and its state of light EXACTLY as they appear there — this shot happens moments later in the same place.`; }
-      const framePrompt = (note) => s.noCharacter
+      const framePrompt = (note) => alt
+        ? `The first image is the location of a film. Create one new photorealistic 16:9 widescreen cinematic film still set in this exact location, keeping its design, materials and lighting identical to the reference.${note} The person in this shot: ${alt}. Crucially, render this person exactly as described, identically every time. This is a candid frame from a movie: mid-action, eyes on their world, never looking at the camera, off-center with foreground depth. Full-bleed widescreen, zero black bars or borders. Composition: ${s.firstFrame}`
+        : s.noCharacter
         ? `The first image is the room. Create one new photorealistic 16:9 widescreen cinematic film still of this exact room, keeping the lamp design, materials and lighting identical to the reference. The lamp in the reference is the ONLY lamp design in this film — reproduce it exactly.${note} This is a POV frame from a movie — what a person standing in the room sees. Nobody is in frame. Full-bleed widescreen, zero black bars or borders. Composition: ${s.firstFrame}`
         : `The first image is the man. The second image is the room. Create one new photorealistic 16:9 widescreen cinematic film still of this exact man inside this exact room. Crucially, the man's facial features, hair, and unique identity must match the first reference image exactly, and his clothing must match with nothing added or removed. Keep the room's lamp design and lighting identical to the references. The lamp in the room reference is the ONLY lamp design in this film — reproduce it exactly.${note} This is a candid frame from a movie: he is mid-action with his eyes on his work, never looking at the camera, placed off-center with foreground depth. Full-bleed widescreen, zero black bars or borders. Composition: ${s.firstFrame}`;
       // progressive reference fallback: full chain -> canon only -> set only
@@ -519,7 +532,7 @@ export async function makeFilm(cfg, opts) {
           let correction = '', verdict = null;
           for (let qc = 0; qc < 3; qc++) {
             fs.writeFileSync(framePath, await genImage(cfg, framePrompt(note) + correction, r));
-            verdict = await auditFrame(cfg, framePath, charPath, setPath, s.noCharacter, s.firstFrame);
+            verdict = await auditFrame(cfg, framePath, charPath, setPath, s.noCharacter || !!alt, s.firstFrame);
             if (verdict.pass) break;
             log(`  audit reject (${verdict.issues.join('; ').slice(0, 90)}) — regenerating …`);
             correction = ` PREVIOUS ATTEMPT WAS REJECTED for these defects: ${verdict.issues.join('; ')}. Fix exactly these while keeping everything else identical to the references.`;

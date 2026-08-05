@@ -1,6 +1,10 @@
-# FTPA — the Funnel-Tree Prompt Architecture
+# AI Video Generator with Consistent Characters — FTL Studio (FTPA)
 
-**A prompting style, a compilable language, and a one-command studio for cinematic AI video.**
+**Open-source AI video generation: turn one sentence into a directed, multi-shot cinematic film — with the same character and the same set in every shot.** Built on Google Veo 3.1, Gemini image generation, and Claude, with a prompt architecture (FTPA / the Funnel-Tree Prompt Language) that solves character drift in AI video.
+
+[![Topics](https://img.shields.io/badge/AI%20video-text--to--video-blue)](https://github.com/uby174/ftl-studio)
+[![Veo 3.1](https://img.shields.io/badge/Google-Veo%203.1-4285F4)](https://github.com/uby174/ftl-studio)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 One sentence in. A directed, graded, multi-shot film out — with the **same character, the same set, and real film logic** in every shot.
 
@@ -97,6 +101,33 @@ be made, and we're putting the whole architecture in the open to push it:
 - **Challenge it** — the laws in `ARCHITECTURE.md` were learned from failures; break them, prove better ones, PR them.
 
 **Start here:** [CONTRIBUTING.md](CONTRIBUTING.md) · open a [Discussion](../../discussions) · grab a [help-wanted issue](../../issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22)
+
+## FAQ
+
+### How do I keep the same character across multiple AI video clips?
+Text prompts alone cannot lock a face — every generation re-imagines it. FTL Studio solves this by generating a **canon character still once**, then compositing every shot's first frame from that image and animating only approved frames (image-to-video). A vision judge audits each frame against the canon before any video is generated. See [ARCHITECTURE.md](ARCHITECTURE.md) → FTL-1S Sync Protocol.
+
+### Can I generate a multi-shot AI film from a single prompt?
+Yes. `node ftl-studio.mjs "your idea" --shots 4` compiles your sentence into a production plan (character, set, per-shot framing, motion prompts, audio), generates the stills, animates each shot, and assembles a graded film with hard cuts.
+
+### Which video models does this support?
+Google **Veo 3.1** and **Gemini Omni Flash** ship today via the Gemini API, selected by one config line. Adapters for **Sora**, **Kling**, **Runway**, and **Luma** are open issues — the contract is a single function, `genVideo(cfg, motionPrompt, firstFramePng, seconds, outPath)`.
+
+### What is the best prompt format for Veo 3?
+Google's official formula is `[Cinematography] + [Subject] + [Action] + [Context] + [Style & Ambiance]`, with audio as separate sentences (`SFX:`, `Ambient noise:`) and dialogue in quotes. FTL Studio emits exactly this format automatically — see [`flow-format.html`](flow-format.html) for the researched breakdown and worked examples.
+
+### Why do my AI videos look like "AI slop"?
+Common causes this project fixes by construction: posed portraits instead of candid film frames, unmotivated lighting, big motion instead of one small precise action, no shot grammar (wide → medium → insert → payoff), no causality (nothing marks the world), and cross-dissolves instead of hard cuts on action. Each is encoded as a compiler law in [ARCHITECTURE.md](ARCHITECTURE.md).
+
+### Is it free?
+The code is MIT licensed and free. Model usage is billed by Google (Gemini image + Veo/Omni video) and Anthropic (compiler). Run with `--skip-video` to compile plans and stills for cents before spending on video.
+
+### Can I use this in my own app?
+Yes — `ftl-studio.mjs` is importable and side-effect-free: `import { makeFilm } from './ftl-studio.mjs'`. See [INTEGRATION.md](INTEGRATION.md).
+
+---
+
+<sub>**Keywords:** AI video generator, text to video AI, image to video, Veo 3 prompt guide, Veo 3.1 API, Gemini video generation, consistent character AI video, AI film maker, AI short film generator, cinematic AI video, prompt engineering for video, Google Flow prompts, AI storyboard generator, multi-shot AI video, open source AI video tool.</sub>
 
 MIT licensed. Built through a long day of real failures — copyright walls,
 drifting faces, policy filters, pillarboxed frames — every one of which is now

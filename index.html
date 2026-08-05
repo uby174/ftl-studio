@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FTL Studio — AI Video Generator with Consistent Characters (Veo 3.1 + Gemini)</title>
+<meta name="description" content="Open-source AI video generator: turn one sentence into a directed multi-shot cinematic film with the same character in every shot. Built on Google Veo 3.1, Gemini and Claude. Free, MIT licensed.">
+<meta name="keywords" content="AI video generator, text to video AI, image to video, Veo 3 prompt guide, Veo 3.1 API, Gemini video generation, consistent character AI video, AI film maker, cinematic AI video, prompt engineering, AI short film, open source AI video">
+<meta name="author" content="FTL Studio">
+<link rel="canonical" href="https://uby174.github.io/ftl-studio/">
+<meta name="robots" content="index, follow, max-image-preview:large">
+
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://uby174.github.io/ftl-studio/">
+<meta property="og:title" content="FTL Studio — AI Video Generator with Consistent Characters">
+<meta property="og:description" content="One sentence in, a directed multi-shot cinematic AI film out — same character, same set, real film logic. Open source, built on Veo 3.1 + Gemini + Claude.">
+<meta property="og:image" content="https://raw.githubusercontent.com/uby174/ftl-studio/main/films/lighthouse/shot1_frame.png">
+<meta property="og:site_name" content="FTL Studio">
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="FTL Studio — AI Video Generator with Consistent Characters">
+<meta name="twitter:description" content="Turn one sentence into a directed multi-shot AI film. Same character in every shot. Open source, Veo 3.1 + Gemini.">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/uby174/ftl-studio/main/films/lighthouse/shot1_frame.png">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "FTL Studio",
+  "alternateName": "Funnel-Tree Prompt Architecture (FTPA)",
+  "applicationCategory": "MultimediaApplication",
+  "applicationSubCategory": "AI Video Generation",
+  "operatingSystem": "Windows, macOS, Linux (Node.js 18+)",
+  "description": "Open-source AI video generator that compiles one sentence into a directed, multi-shot cinematic film with consistent characters and sets across every shot, using Google Veo 3.1, Gemini image generation and Claude.",
+  "url": "https://uby174.github.io/ftl-studio/",
+  "downloadUrl": "https://github.com/uby174/ftl-studio",
+  "license": "https://opensource.org/licenses/MIT",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+  "keywords": "AI video generator, text to video, image to video, Veo 3.1, Gemini, consistent character, AI filmmaking, prompt engineering"
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "How do I keep the same character across multiple AI video clips?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Text prompts alone cannot lock a face — every generation re-imagines it. FTL Studio generates a canon character still once, then composites every shot's first frame from that image and animates only approved frames using image-to-video. A vision judge audits each frame against the canon before any video is generated."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can I generate a multi-shot AI film from a single prompt?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. One command compiles your sentence into a production plan covering character, set, per-shot framing, motion prompts and audio, then generates stills, animates each shot, and assembles a graded film with hard cuts."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What is the best prompt format for Veo 3?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Google's official formula is Cinematography + Subject + Action + Context + Style and Ambiance, with audio as separate sentences (SFX, Ambient noise) and dialogue in quotes. FTL Studio emits exactly this format automatically."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Which AI video models does FTL Studio support?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Google Veo 3.1 and Gemini Omni Flash ship today via the Gemini API, selected by one config line. Adapters for Sora, Kling, Runway and Luma are open contribution issues."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Is FTL Studio free and open source?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes, the code is MIT licensed and free. Model usage is billed by Google for image and video generation and by Anthropic for the compiler. A skip-video mode lets you compile plans and stills for cents before spending on video."
+      }
+    }
+  ]
+}
+</script>
+
+<style>
+  :root{--bg:#0b0e14;--panel:#121722;--line:#2a3348;--ink:#e8ecf4;--dim:#8b96ad;--gold:#e8b64c;--green:#7ec98f}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--ink);font-family:'Segoe UI',system-ui,-apple-system,sans-serif;line-height:1.6}
+  .wrap{max-width:940px;margin:0 auto;padding:0 22px}
+  header{padding:60px 0 30px;text-align:center}
+  h1{font-size:38px;line-height:1.2;letter-spacing:-.5px}
+  h1 span{color:var(--gold)}
+  .sub{color:var(--dim);font-size:18px;margin-top:16px;max-width:700px;margin-left:auto;margin-right:auto}
+  .cta{margin-top:28px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+  .btn{display:inline-block;background:var(--gold);color:#161006;text-decoration:none;font-weight:700;
+    padding:13px 26px;border-radius:8px;font-size:15px}
+  .btn.alt{background:transparent;color:var(--ink);border:1px solid var(--line)}
+  .btn:hover{filter:brightness(1.1)}
+  pre{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px;
+    overflow-x:auto;font-family:Consolas,'SF Mono',monospace;font-size:13px;color:#cfd8e8;margin:24px 0}
+  .shots{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin:34px 0}
+  .shots img{width:100%;border-radius:10px;border:1px solid var(--line);display:block}
+  h2{font-size:24px;margin:46px 0 14px}
+  h3{font-size:17px;margin:26px 0 6px;color:var(--gold)}
+  p{color:#c6cede}
+  ul{color:#c6cede;padding-left:22px;margin:10px 0}
+  li{margin:6px 0}
+  table{width:100%;border-collapse:collapse;margin:18px 0;font-size:14px}
+  th,td{border:1px solid var(--line);padding:10px 12px;text-align:left;vertical-align:top}
+  th{color:var(--gold);font-size:12px;letter-spacing:1px;text-transform:uppercase}
+  footer{margin:70px 0 50px;padding-top:24px;border-top:1px solid var(--line);color:var(--dim);font-size:13px;text-align:center}
+  a{color:var(--green)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>AI Video Generator with <span>Consistent Characters</span></h1>
+  <p class="sub">FTL Studio turns <b>one sentence</b> into a directed, multi-shot cinematic film — the same character and the same set in every shot. Open source, built on Google Veo 3.1, Gemini and Claude.</p>
+  <div class="cta">
+    <a class="btn" href="https://github.com/uby174/ftl-studio">Get it on GitHub</a>
+    <a class="btn alt" href="https://github.com/uby174/ftl-studio/releases/latest">Watch sample films</a>
+  </div>
+</header>
+
+<pre>node ftl-studio.mjs "an old lighthouse keeper repairing the great lamp as a storm closes in" --shots 4</pre>
+
+<div class="shots">
+  <img src="films/lighthouse/character.png" alt="AI-generated canon character still of a lighthouse keeper used to lock identity across shots">
+  <img src="films/lighthouse/set.png" alt="AI-generated canon set still of a lighthouse lantern room used to lock the location across shots">
+  <img src="films/lighthouse/shot1_frame.png" alt="Directed AI video first frame composited from the character and set references">
+</div>
+
+<h2>The problem: AI video characters change every clip</h2>
+<p>Everyone who has generated AI video knows the pattern — the first clip is magic, the second stars a different actor in a different room, and by the third your "film" is a slideshow of strangers. Text prompts cannot lock a face, because every generation re-imagines every visual fact.</p>
+
+<h2>The fix: compile prompts, then animate approved images</h2>
+<ul>
+  <li><b>Compile, don't write.</b> A sentence is scattered into typed nodes, expanded through six lenses (form, material, motion, light, sound, physics), and converged under a precedence law so contradictions die before the model sees them.</li>
+  <li><b>Lock identity in stills.</b> A canon character still and set still are approved once, then every shot's first frame is composited from them and chained to the previous frame.</li>
+  <li><b>Animate only approved frames.</b> Image-to-video preserves the still's identity; motion prompts stay short and describe only what moves, the camera, and the audio.</li>
+  <li><b>Edit like film.</b> Hard cuts on action, unified grade, fine grain, loudness-normalised audio — one film, not four clips.</li>
+</ul>
+
+<h2>What it produces</h2>
+<table>
+  <tr><th>Stage</th><th>Output</th></tr>
+  <tr><td>Compile</td><td><code>plan.json</code> — the reproducible film recipe: character, set, per-shot framing, motion prompts, audio</td></tr>
+  <tr><td>Canon</td><td><code>character.png</code>, <code>set.png</code> — approved once, reused forever</td></tr>
+  <tr><td>Frames</td><td><code>shotN_frame.png</code> — vision-audited before any video spend</td></tr>
+  <tr><td>Video</td><td><code>shotN.mp4</code> via Veo 3.1 or Gemini Omni Flash (image-to-video)</td></tr>
+  <tr><td>Film</td><td><code>film.mp4</code> — graded, hard-cut, mixed</td></tr>
+</table>
+
+<h2>Frequently asked questions</h2>
+
+<h3>How do I keep the same character across multiple AI video clips?</h3>
+<p>Generate a canon character still once, then composite every shot's first frame from that image and animate only approved frames. FTL Studio automates this and runs a vision judge on every frame before spending on video.</p>
+
+<h3>Can I generate a multi-shot AI film from a single prompt?</h3>
+<p>Yes — one command compiles the plan, generates the stills, animates each shot, and assembles the finished film.</p>
+
+<h3>What is the best prompt format for Veo 3?</h3>
+<p>Google's official formula: <i>Cinematography + Subject + Action + Context + Style &amp; Ambiance</i>, with audio as separate <code>SFX:</code> and <code>Ambient noise:</code> sentences and dialogue in quotes. FTL Studio emits this automatically.</p>
+
+<h3>Which AI video models are supported?</h3>
+<p>Google Veo 3.1 and Gemini Omni Flash today, selected by one config line. Adapters for Sora, Kling, Runway and Luma are open contribution issues.</p>
+
+<h3>Is it free?</h3>
+<p>The code is MIT licensed and free. Model usage is billed by Google and Anthropic; a <code>--skip-video</code> mode lets you approve plans and stills for cents first.</p>
+
+<footer>
+  MIT licensed · <a href="https://github.com/uby174/ftl-studio">github.com/uby174/ftl-studio</a> ·
+  AI video generation, text-to-video, image-to-video, consistent characters, Veo 3.1, Gemini, prompt engineering
+</footer>
+
+</div>
+</body>
+</html>
