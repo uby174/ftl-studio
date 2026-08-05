@@ -105,6 +105,26 @@ HARD RULES:
     a look. 60-110 words, short declarative sentences.
   * Phrase all exclusions positively (say what IS there, never "no X" / "don't").
 
+SUB-BRANCH PASS (run after converging, before writing stills): decompose every
+canon element into its smallest child details, funnel-style, 2 levels down:
+- character: face (each region: brow/scar, nose, beard edge, eye lines), hands
+  (knuckles, calluses, nail state), each wardrobe item (its fastenings, its
+  specific wear marks, how it hangs), carried gear (each strap, each buckle).
+- set: the centerpiece object part by part (its segments, joints, flaws), each
+  surface (its material, age marks, how light sits on it), each light source
+  (its housing, flame or glow behavior), weather at each boundary.
+Bake the resulting micro-details INTO characterStill and setStill prose — the
+stills are where sub-branches live. A detail not written down is a detail the
+model will invent differently every time.
+
+CLOSED-WORLD MANIFEST (absolute, per shot): every firstFrame ENDS with a
+sentence beginning "In frame: " listing EVERY object visible in that frame with
+its current state (e.g. "In frame: the keeper kneeling, the unrolled leather
+tool roll with wick scissors and brass oil can, the dead lamp behind, his lit
+hand-lantern left, rain on two window panes."). The frame contains those
+things and nothing else. No unlisted object may appear; every listed object
+carries its declared state.
+
 IDENTITY IS REFERENCE-ONLY (absolute): firstFrame and motion NEVER name clothing,
 headwear, gloves, hair, face details, or new props — write only "the man from the
 reference image" and let the reference supply identity. Wardrobe exists ONLY in
@@ -351,16 +371,17 @@ function haveFfmpeg() { try { execSync('ffmpeg -version', { stdio: 'ignore' }); 
 
 // Closed-loop QC: a vision judge checks every candidate frame against canon
 // before any video money is spent. Judge failure = pass (never blocks pipeline).
-export async function auditFrame(cfg, framePath, charPath, setPath, noCharacter) {
+export async function auditFrame(cfg, framePath, charPath, setPath, noCharacter, frameDesc = '') {
   try {
     const parts = [];
     if (!noCharacter) parts.push({ inlineData: { mimeType: 'image/png', data: fs.readFileSync(charPath).toString('base64') } });
     parts.push({ inlineData: { mimeType: 'image/png', data: fs.readFileSync(setPath).toString('base64') } });
     parts.push({ inlineData: { mimeType: 'image/png', data: fs.readFileSync(framePath).toString('base64') } });
+    const manifest = frameDesc ? ` Also check against this shot description (especially any "In frame:" list — an object present but unlisted, or listed but missing/wrong-state, is a defect): "${frameDesc.slice(0, 600)}". Set "manifestMatch" accordingly.` : '';
     parts.push({
       text: noCharacter
-        ? 'Image 1 is the canon room of a film (note the lamp design and materials). Image 2 is a candidate frame. Reply ONLY JSON: {"sameLamp":boolean,"issues":[string]}. sameLamp is true only if the lamp/lens design matches the canon room. List concrete visual mismatches in issues.'
-        : 'Image 1 is the canon character of a film. Image 2 is the canon room (note the lamp design). Image 3 is a candidate frame. Reply ONLY JSON: {"sameMan":boolean,"wardrobeMatch":boolean,"sameLamp":boolean,"issues":[string]}. sameMan: same face. wardrobeMatch: identical clothing — any added cap, hat, different gloves or coat is false. sameLamp: lamp design matches canon room (true if lamp not visible). List concrete mismatches in issues.',
+        ? `Image 1 is the canon room of a film (note the lamp design and materials). Image 2 is a candidate frame. Reply ONLY JSON: {"sameLamp":boolean,"manifestMatch":boolean,"issues":[string]}. sameLamp is true only if the lamp/lens design matches the canon room.${manifest} List concrete visual mismatches in issues.`
+        : `Image 1 is the canon character of a film. Image 2 is the canon room (note the lamp design). Image 3 is a candidate frame. Reply ONLY JSON: {"sameMan":boolean,"wardrobeMatch":boolean,"sameLamp":boolean,"manifestMatch":boolean,"issues":[string]}. sameMan: same face. wardrobeMatch: identical clothing — any added cap, hat, different gloves or coat is false. sameLamp: lamp design matches canon room (true if lamp not visible).${manifest} List concrete mismatches in issues.`,
     });
     const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${cfg.models.judge}:generateContent`, {
       method: 'POST',
@@ -373,8 +394,9 @@ export async function auditFrame(cfg, framePath, charPath, setPath, noCharacter)
     const m = text.match(/\{[\s\S]*\}/);
     if (!m) return { pass: true, issues: [] };
     const v = JSON.parse(m[0]);
-    const pass = noCharacter ? v.sameLamp !== false
-      : v.sameMan !== false && v.wardrobeMatch !== false && v.sameLamp !== false;
+    const pass = (noCharacter ? v.sameLamp !== false
+      : v.sameMan !== false && v.wardrobeMatch !== false && v.sameLamp !== false)
+      && v.manifestMatch !== false;
     return { pass, issues: v.issues || [] };
   } catch { return { pass: true, issues: [] }; }
 }
@@ -490,7 +512,7 @@ export async function makeFilm(cfg, opts) {
           let correction = '', verdict = null;
           for (let qc = 0; qc < 3; qc++) {
             fs.writeFileSync(framePath, await genImage(cfg, framePrompt(note) + correction, r));
-            verdict = await auditFrame(cfg, framePath, charPath, setPath, s.noCharacter);
+            verdict = await auditFrame(cfg, framePath, charPath, setPath, s.noCharacter, s.firstFrame);
             if (verdict.pass) break;
             log(`  audit reject (${verdict.issues.join('; ').slice(0, 90)}) — regenerating …`);
             correction = ` PREVIOUS ATTEMPT WAS REJECTED for these defects: ${verdict.issues.join('; ')}. Fix exactly these while keeping everything else identical to the references.`;
