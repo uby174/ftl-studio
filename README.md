@@ -89,7 +89,23 @@ Everything else is kept. `plan.json` is the reproducible recipe for the whole fi
 2. **Film logic, not clip logic** — shot-size arcs, prop through-lines, screen direction, and causality are *compiled in*, so output cuts together like cinema.
 3. **Policy-safe by construction** — plain film-brief language, positive phrasing, no trigger metaphors. Born from real rejections.
 4. **Cost-gated** — approve cheap stills before a cent of video spend; partial failures (quota, filters) never lose finished work.
-5. **Reproducible & portable** — the compiled plan is a JSON recipe; the language is model-agnostic (Veo today; the format layer adapts to Sora/Kling/Runway).
+5. **Auditable & portable** — every frame and every rendered clip is scored 0-100 by a **cross-family** vision judge (Claude judging Google-generated images, so the critic doesn't share the generator's blind spots), and the verdicts are written to `qc.json`. The compiled `plan.json` is a reproducible *recipe*; the pixels are not bit-reproducible — the image and video APIs expose no seed. The language is model-agnostic (Veo and Gemini Omni today; the adapter contract is one function).
+
+## Does it actually work? — `EVAL.md`
+
+Claims in this repo are measured, not asserted:
+
+```bash
+node eval.mjs                    # 3 seeds × {full, no-canon baseline}
+node eval.mjs --conditions all   # + no-judge, no-chain, no-manifest ablations
+```
+
+Each condition runs identical seeds with one mechanism disabled and scores every
+frame against that run's own canon on four axes — identity, wardrobe, set match,
+manifest compliance. A frame scores its **weakest** axis, because an averaged
+score hides a failed face. `no-canon` is the naive baseline: no reference images,
+every shot generated from text alone. Results land in `EVAL.md` with per-mechanism
+deltas; any law that shows no delta is a candidate for deletion from the compiler.
 
 ## What we want
 

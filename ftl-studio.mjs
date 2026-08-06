@@ -8,12 +8,17 @@ FTL STUDIO — end-to-end video wrapper for the Funnel-Tree Prompt Architecture.
 USAGE
   node ftl-studio.mjs setup                          write keys.json template
   node ftl-studio.mjs models                         list your available Google models
-  node ftl-studio.mjs "an old lighthouse keeper..."  make a film (3 shots default)
-     --shots N      number of shots (1-6, default 3)
+  node ftl-studio.mjs "an old lighthouse keeper..."  make a film (3 beats default)
+     --beats N      narrative beats, 1-6 (default 3). Each beat compiles into
+                    2 shots of coverage, so N beats => up to 2N clips.
+     --shots N      alias for --beats (kept for compatibility)
      --name NAME    project folder name (default: derived from seed)
      --shot N       only generate video for shot N
      --skip-video   compile + stills only (cheap dry run)
      --redo-stills  regenerate stills even if they exist
+     --fast         generate clips in parallel (faster, weaker state chaining)
+     --no-video-qc  skip post-render video auditing
+     --jobs N       parallel clip workers when --fast (default 3)
 
 KEYS (keys.json next to this file, or environment variables)
   ANTHROPIC_API_KEY   console.anthropic.com        — the compiler brain
@@ -38,7 +43,7 @@ export function loadKeys() {
     anthropic: k.ANTHROPIC_API_KEY || process.env.ANTHROPIC_API_KEY || '',
     google: k.GOOGLE_API_KEY || process.env.GOOGLE_API_KEY || '',
     models: Object.assign(
-      { compiler: 'claude-opus-5', image: 'gemini-2.5-flash-image', video: 'veo-3.1-generate-preview', judge: 'gemini-2.5-flash' },
+      { compiler: 'claude-opus-5', image: 'gemini-2.5-flash-image', video: 'veo-3.1-generate-preview', judge: 'claude-sonnet-5' },
       k.models || {},
     ),
   };
@@ -50,14 +55,22 @@ function setup() {
   fs.writeFileSync(KEYS_PATH, JSON.stringify({
     ANTHROPIC_API_KEY: '',
     GOOGLE_API_KEY: '',
-    models: { compiler: 'claude-opus-5', image: 'gemini-2.5-flash-image', video: 'veo-3.1-generate-preview' },
+    models: { compiler: 'claude-opus-5', image: 'gemini-2.5-flash-image', video: 'veo-3.1-generate-preview', judge: 'claude-sonnet-5' },
   }, null, 2));
   console.log(`Wrote ${KEYS_PATH} — paste your keys into it.`);
 }
 
 const log = (s) => console.log(`\x1b[33m▸\x1b[0m ${s}`);
 const ok = (s) => console.log(`\x1b[32m✓\x1b[0m ${s}`);
+const warn = (s) => console.warn(`\x1b[35m! ${s}\x1b[0m`);
 const die = (s) => { console.error(`\x1b[31m✕ ${s}\x1b[0m`); process.exit(1); };
+
+// Any user-supplied string that reaches a filesystem path or a shell command
+// must pass through here. Defends the ffmpeg/ffprobe execSync calls.
+export const slug = (s) => String(s || '').toLowerCase()
+  .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40) || 'film';
+
+const QC_PASS_FLOOR = 70; // graded judge: below this a frame is never shipped
 
 // ---------- step 1: Claude compiles the film ----------
 const COMPILER_SYSTEM = `You are the FTL Studio Compiler for the Funnel-Tree Prompt
@@ -133,24 +146,22 @@ anchored to canon by 2-3 inherited features (same eye color, same cowlick, the
 scar he will get). Shots with altCharacter set leave the canon man out of frame
 unless both appear. altCharacter is "" when unused.
 
-CLOSED-WORLD MANIFEST (absolute, per shot): every firstFrame ENDS with a
-sentence beginning "In frame: " listing EVERY object visible in that frame with
-its current state (e.g. "In frame: the keeper kneeling, the unrolled leather
-tool roll with wick scissors and brass oil can, the dead lamp behind, his lit
-hand-lantern left, rain on two window panes."). The frame contains those
-things and nothing else. No unlisted object may appear; every listed object
-carries its declared state.
-
-IDENTITY IS REFERENCE-ONLY (absolute): firstFrame and motion NEVER name clothing,
-headwear, gloves, hair, face details, or new props — write only "the man from the
-reference image" and let the reference supply identity. Wardrobe exists ONLY in
-characterStill. Props exist ONLY if introduced by the story (the tool roll, the
-named repair part). A cap, hat, or glove change invented mid-film is a defect.
-
-WORLD-STATE TIMELINE (absolute): any object that changes during the film (the lamp:
-dead vs lit; a repaired part) has exactly ONE state per shot, stated in every
-firstFrame ("the great lamp is dead and dark" / "the lamp now burns"). The state
-changes ONLY inside the shot whose action changes it, and never reverts.
+CONSISTENCY LAWS (absolute — these three decide whether the film cuts together):
+1. IDENTITY IS REFERENCE-ONLY. firstFrame and motion NEVER name clothing,
+   headwear, gloves, hair, face details, or new props — write only "the man from
+   the reference image" and let the reference supply identity. Wardrobe exists
+   ONLY in characterStill. Props exist ONLY if the story introduced them. A cap,
+   hat, or glove invented mid-film is a defect.
+2. CLOSED-WORLD MANIFEST. Every firstFrame ENDS with a sentence beginning
+   "In frame: " listing EVERY object visible with its current state (e.g.
+   "In frame: the keeper kneeling, the unrolled leather tool roll with wick
+   scissors and brass oil can, the dead lamp behind, his lit hand-lantern left,
+   rain on two window panes."). That list is the whole frame: no unlisted object
+   appears, every listed object carries its declared state.
+3. WORLD-STATE TIMELINE. Any object that changes during the film (the lamp: dead
+   vs lit; a repaired part) has exactly ONE state per shot, stated in every
+   firstFrame. The state changes ONLY inside the shot whose action changes it,
+   and never reverts.
 
 DIRECTOR'S RULES (these override everything else about composition):
 - Every firstFrame is a CANDID FILM STILL, never a portrait: the character is
@@ -386,36 +397,101 @@ async function listModels(cfg) {
 
 function haveFfmpeg() { try { execSync('ffmpeg -version', { stdio: 'ignore' }); return true; } catch { return false; } }
 
-// Closed-loop QC: a vision judge checks every candidate frame against canon
-// before any video money is spent. Judge failure = pass (never blocks pipeline).
+// Closed-loop QC. The judge is CROSS-FAMILY on purpose: the generator is a
+// Google image model, so the critic is Claude — a same-family critic shares the
+// generator's blind spots and inflates its own output (self-preference bias).
+// Scores are graded (0-100), never binary, and a judge outage is reported as
+// `unverified` instead of being silently swallowed as a pass.
+const IDENTITY_RUBRIC = `Score 0-100 for each axis. 100 = indistinguishable from the reference; 0 = a different subject entirely.
+- identity: same face — bone structure, nose, brow, scar placement, hairline, beard shape.
+- wardrobe: identical clothing. ANY added or removed item (cap, hat, gloves, coat, strap) caps this at 40.
+- setMatch: the location's centerpiece object (lamp/lens/machine), materials and light behaviour match the canon room. If the location is not visible, score 100.
+- manifest: the frame contains exactly the objects the shot description lists, each in its declared state. An unlisted object present, or a listed object missing or in the wrong state, caps this at 50.`;
+
 export async function auditFrame(cfg, framePath, charPath, setPath, noCharacter, frameDesc = '') {
+  const b64 = (p) => fs.readFileSync(p).toString('base64');
+  const img = (p) => ({ type: 'image', source: { type: 'base64', media_type: 'image/png', data: b64(p) } });
   try {
-    const parts = [];
-    if (!noCharacter) parts.push({ inlineData: { mimeType: 'image/png', data: fs.readFileSync(charPath).toString('base64') } });
-    parts.push({ inlineData: { mimeType: 'image/png', data: fs.readFileSync(setPath).toString('base64') } });
-    parts.push({ inlineData: { mimeType: 'image/png', data: fs.readFileSync(framePath).toString('base64') } });
-    const manifest = frameDesc ? ` Also check against this shot description (especially any "In frame:" list — an object present but unlisted, or listed but missing/wrong-state, is a defect): "${frameDesc.slice(0, 600)}". Set "manifestMatch" accordingly.` : '';
-    parts.push({
-      text: noCharacter
-        ? `Image 1 is the canon room of a film (note the lamp design and materials). Image 2 is a candidate frame. Reply ONLY JSON: {"sameLamp":boolean,"manifestMatch":boolean,"issues":[string]}. sameLamp is true only if the lamp/lens design matches the canon room.${manifest} List concrete visual mismatches in issues.`
-        : `Image 1 is the canon character of a film. Image 2 is the canon room (note the lamp design). Image 3 is a candidate frame. Reply ONLY JSON: {"sameMan":boolean,"wardrobeMatch":boolean,"sameLamp":boolean,"manifestMatch":boolean,"issues":[string]}. sameMan: same face. wardrobeMatch: identical clothing — any added cap, hat, different gloves or coat is false. sameLamp: lamp design matches canon room (true if lamp not visible).${manifest} List concrete mismatches in issues.`,
+    const content = [];
+    if (!noCharacter) { content.push({ type: 'text', text: 'REFERENCE A — the canon character of this film:' }); content.push(img(charPath)); }
+    content.push({ type: 'text', text: 'REFERENCE B — the canon location of this film:' });
+    content.push(img(setPath));
+    content.push({ type: 'text', text: 'CANDIDATE — a frame proposed for the film:' });
+    content.push(img(framePath));
+    content.push({
+      type: 'text',
+      text: `You are the continuity supervisor on this film. Judge the CANDIDATE against the references.
+${IDENTITY_RUBRIC}
+${frameDesc ? `The shot description for this frame is: "${frameDesc.slice(0, 700)}"` : ''}
+${noCharacter ? 'No person should appear in this candidate; score identity and wardrobe 100 and judge only setMatch and manifest.' : ''}
+Reply with ONLY this JSON, at most 4 issues, each under 15 words: {"identity":int,"wardrobe":int,"setMatch":int,"manifest":int,"issues":["concrete visual defect"]}`,
     });
-    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${cfg.models.judge}:generateContent`, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json', 'x-goog-api-key': cfg.google },
-      body: JSON.stringify({ contents: [{ parts }] }),
-    });
-    const data = await res.json();
-    if (!res.ok) return { pass: true, issues: [] };
-    const text = (data.candidates?.[0]?.content?.parts || []).map(p => p.text || '').join('');
+    // Transient judge failures are common enough that one silent retry is worth
+    // more than a mis-labelled UNVERIFIED frame.
+    let data = null, lastFail = '';
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        const res = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json', 'x-api-key': cfg.anthropic, 'anthropic-version': '2023-06-01' },
+          body: JSON.stringify({
+            model: cfg.models.judge, max_tokens: 2000,
+            messages: [{ role: 'user', content }],
+            // prefill-free structured output: the judge must answer in schema
+            output_config: { format: { type: 'json_schema', schema: {
+              type: 'object',
+              properties: { identity: { type: 'integer' }, wardrobe: { type: 'integer' }, setMatch: { type: 'integer' }, manifest: { type: 'integer' }, issues: { type: 'array', items: { type: 'string' } } },
+              required: ['identity', 'wardrobe', 'setMatch', 'manifest', 'issues'],
+              additionalProperties: false,
+            } } },
+          }),
+        });
+        const j = await res.json();
+        if (!res.ok) { lastFail = j?.error?.message || String(res.status); await new Promise(r => setTimeout(r, 1500)); continue; }
+        data = j; break;
+      } catch (e) { lastFail = e.message; await new Promise(r => setTimeout(r, 1500)); }
+    }
+    if (!data) { warn(`judge unavailable (${lastFail.slice(0, 70)}) — frame shipped UNVERIFIED`); return { pass: true, unverified: true, score: null, issues: [] }; }
+    const text = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('');
     const m = text.match(/\{[\s\S]*\}/);
-    if (!m) return { pass: true, issues: [] };
+    if (!m) { warn('judge returned unparseable output — frame shipped UNVERIFIED'); return { pass: true, unverified: true, score: null, issues: [] }; }
     const v = JSON.parse(m[0]);
-    const pass = (noCharacter ? v.sameLamp !== false
-      : v.sameMan !== false && v.wardrobeMatch !== false && v.sameLamp !== false)
-      && v.manifestMatch !== false;
-    return { pass, issues: v.issues || [] };
-  } catch { return { pass: true, issues: [] }; }
+    const axes = noCharacter ? ['setMatch', 'manifest'] : ['identity', 'wardrobe', 'setMatch', 'manifest'];
+    const vals = axes.map(a => Number.isFinite(v[a]) ? v[a] : 100);
+    const score = Math.min(...vals); // weakest axis decides — an averaged score hides a failed face
+    return { pass: score >= QC_PASS_FLOOR, unverified: false, score, axes: Object.fromEntries(axes.map((a, i) => [a, vals[i]])), issues: v.issues || [] };
+  } catch (e) {
+    warn(`judge error (${e.message.slice(0, 60)}) — frame shipped UNVERIFIED`);
+    return { pass: true, unverified: true, score: null, issues: [] };
+  }
+}
+
+// Post-render QC: the most drift-prone step is the video itself, so sample the
+// rendered clip and judge those frames too. Without this, drift that appears
+// only in motion (a glove changing mid-take) is invisible to the pipeline.
+export async function auditClip(cfg, clipPath, charPath, setPath, noCharacter, frameDesc = '', samples = 3) {
+  if (!haveFfmpeg()) return { pass: true, unverified: true, score: null, issues: [] };
+  const tmp = [];
+  try {
+    const dur = clipDuration(clipPath);
+    for (let i = 0; i < samples; i++) {
+      const t = (dur * (i + 1)) / (samples + 1);
+      const out = `${clipPath}.qc${i}.png`;
+      execSync(`ffmpeg -y -v quiet -ss ${t.toFixed(2)} -i "${clipPath}" -frames:v 1 "${out}"`);
+      tmp.push(out);
+    }
+    let worst = { pass: true, unverified: false, score: 100, issues: [] };
+    for (const f of tmp) {
+      const v = await auditFrame(cfg, f, charPath, setPath, noCharacter, frameDesc);
+      if (v.unverified) return { ...v, issues: [] };
+      if (v.score !== null && v.score < (worst.score ?? 101)) worst = v;
+    }
+    return worst;
+  } catch (e) {
+    return { pass: true, unverified: true, score: null, issues: [e.message.slice(0, 80)] };
+  } finally {
+    for (const f of tmp) { try { fs.unlinkSync(f); } catch {} }
+  }
 }
 
 function clipDuration(f) {
@@ -447,10 +523,17 @@ export function finishFilm(dir, clips) {
   const aChain = '';
   const prevV = 'vc', prevA = 'ac';
   const total = trimmed.reduce((a, b) => a + b, 0);
+  // Audio continuity: each clip's audio is generated independently, so the room
+  // tone jumps at every cut. A low continuous bed — the first clip's ambience,
+  // low-passed, looped under the whole film — glues the cuts together the way a
+  // production sound mix does. Picture still hard-cuts.
+  const bed = `;[0:a]atrim=0:${Math.min(3, durs[0]).toFixed(2)},asetpts=PTS-STARTPTS,aloop=loop=-1:size=2e9,atrim=0:${total.toFixed(3)},` +
+    `lowpass=f=900,volume=0.16,afade=t=in:st=0:d=1.2,afade=t=out:st=${(total - 1.4).toFixed(3)}:d=1.4[bed]` +
+    `;[${prevA}][bed]amix=inputs=2:duration=first:weights=1 0.55,dynaudnorm=g=7[amixed]`;
   const grade = `;[${prevV}]eq=contrast=1.05:saturation=0.93:brightness=-0.01,noise=alls=5:allf=t,` +
     `fade=t=in:st=0:d=0.6,fade=t=out:st=${(total - 0.8).toFixed(3)}:d=0.8[vout]` +
-    `;[${prevA}]afade=t=in:st=0:d=0.5,afade=t=out:st=${(total - 0.9).toFixed(3)}:d=0.9,loudnorm=I=-16:TP=-1.5[aout]`;
-  const fc = norm + vChain + aChain + grade;
+    `;[amixed]afade=t=in:st=0:d=0.5,afade=t=out:st=${(total - 0.9).toFixed(3)}:d=0.9,loudnorm=I=-16:TP=-1.5[aout]`;
+  const fc = norm + vChain + aChain + bed + grade;
   const out = path.join(dir, 'film.mp4');
   execSync(`ffmpeg -y -v error ${inputs} -filter_complex "${fc}" -map "[vout]" -map "[aout]" -c:v libx264 -preset slow -crf 18 -c:a aac -b:a 192k "${out}"`,
     { maxBuffer: 64 * 1024 * 1024 });
@@ -466,8 +549,12 @@ export function finishFilm(dir, clips) {
  */
 export async function makeFilm(cfg, opts) {
   const { seed, name = null, onlyShot = null, skipVideo = false, redoStills = false,
-    outRoot = path.join(HERE, 'films'), onEvent = null } = opts;
-  const nShots = Math.min(6, Math.max(1, opts.shots || 3));
+    outRoot = path.join(HERE, 'films'), onEvent = null,
+    fast = false, jobs = 3, videoQc = true,
+    // Ablation switches — used by eval.mjs to measure what each mechanism is
+    // actually worth. All false in normal operation.
+    ablate = {} } = opts;
+  const nShots = Math.min(6, Math.max(1, opts.beats || opts.shots || 3));
   const errors = [];
   const emit = (stage, detail) => { if (onEvent) onEvent({ stage, detail }); };
   if (!seed) throw new Error('makeFilm: opts.seed is required');
@@ -476,8 +563,7 @@ export async function makeFilm(cfg, opts) {
 
   // 1 — compile
   let dir, plan;
-  const tmpName = name || seed.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40);
-  dir = path.join(outRoot, tmpName);
+  dir = path.join(outRoot, slug(name || seed)); // slug(): shell-safe, path-safe
   fs.mkdirSync(dir, { recursive: true });
   const planPath = path.join(dir, 'plan.json');
   if (fs.existsSync(planPath)) {
@@ -503,20 +589,46 @@ export async function makeFilm(cfg, opts) {
     ok(`${label}.png  (not happy? delete it or use --redo-stills and re-run)`);
   }
 
+  // QC ledger — which artifacts passed the judge. Persisted so a resumed run
+  // never chains from, or silently ships, an unverified frame.
+  const qcPath = path.join(dir, 'qc.json');
+  const qc = fs.existsSync(qcPath) ? JSON.parse(fs.readFileSync(qcPath, 'utf8')) : { frames: {}, clips: {} };
+  const saveQc = () => fs.writeFileSync(qcPath, JSON.stringify(qc, null, 2));
+
   // 3 — per shot: first frame then video
-  for (const s of plan.shots) {
-    if (onlyShot && String(s.n) !== String(onlyShot)) continue;
+  const makeFrame = async (s) => {
     const framePath = path.join(dir, `shot${s.n}_frame.png`);
-    if (!fs.existsSync(framePath) || redoStills) {
+    if (fs.existsSync(framePath) && !redoStills) return framePath;
+    {
       const alt = (s.altCharacter || '').trim();
       log(`shot ${s.n} "${s.title}" — first frame${s.noCharacter ? ' (POV, no character)' : alt ? ' (alt character)' : ''} …`);
-      // frame chaining: previous shot's frame locks the set geometry for this one
-      const prevFrame = path.join(dir, `shot${s.n - 1}_frame.png`);
-      const baseRefs = (s.noCharacter || alt) ? [setPath] : [charPath, setPath];
+      // State chaining. Prefer the LAST FRAME OF THE PREVIOUS CLIP — that is the
+      // world after the previous action actually rendered, so the next shot
+      // inherits real state rather than a predicted still. Falls back to the
+      // previous first frame. Only chains from artifacts that PASSED the judge:
+      // chaining off a defective frame propagates the defect through the film.
+      const prevN = s.n - 1;
+      const prevClipLast = path.join(dir, `shot${prevN}_last.png`);
+      const prevFrame = path.join(dir, `shot${prevN}_frame.png`);
+      let chainRef = null, chainKind = '';
+      if (ablate.chain) { /* ablation: no state chaining */ }
+      else if (fs.existsSync(prevClipLast) && qc.clips[prevN]?.pass !== false) { chainRef = prevClipLast; chainKind = 'clip-end'; }
+      else if (fs.existsSync(prevFrame) && qc.frames[prevN]?.pass !== false) { chainRef = prevFrame; chainKind = 'frame'; }
+      else if (fs.existsSync(prevFrame)) log(`  previous frame failed QC — chaining from canon only`);
+      const baseRefs = ablate.canon ? [] : (s.noCharacter || alt) ? [setPath] : [charPath, setPath];
       const refs = [...baseRefs];
       let chainNote = '';
-      if (fs.existsSync(prevFrame)) { refs.push(prevFrame); chainNote = ` The ${refs.length === 3 ? 'third' : 'second'} image is a frame already filmed from this same movie: keep the room, the lamp design, its geometry and its state of light EXACTLY as they appear there — this shot happens moments later in the same place.`; }
-      const framePrompt = (note) => alt
+      if (chainRef && !ablate.canon) {
+        refs.push(chainRef);
+        chainNote = ` The ${refs.length === 3 ? 'third' : 'second'} image is ${chainKind === 'clip-end' ? 'the final frame of the previous shot of this same movie' : 'a frame already filmed from this same movie'}: keep the room, its centerpiece design, its geometry and its state of light EXACTLY as they appear there — this shot happens moments later in the same place.`;
+      }
+      // ablation: strip the closed-world "In frame:" manifest from the shot brief
+      const brief = ablate.manifest ? String(s.firstFrame).replace(/In frame:[\s\S]*$/i, '').trim() : s.firstFrame;
+      const framePrompt = (note) => ablate.canon
+        // baseline condition: no reference images at all — pure text-to-image,
+        // the way a naive pipeline generates each shot independently
+        ? `Photorealistic 16:9 widescreen cinematic film still. ${plan.characterStill.slice(0, 400)} Scene: ${plan.setStill.slice(0, 400)} Composition: ${brief}`
+        : alt
         ? `The first image is the location of a film. Create one new photorealistic 16:9 widescreen cinematic film still set in this exact location, keeping its design, materials and lighting identical to the reference.${note} The person in this shot: ${alt}. Crucially, render this person exactly as described, identically every time. This is a candid frame from a movie: mid-action, eyes on their world, never looking at the camera, off-center with foreground depth. Full-bleed widescreen, zero black bars or borders. Composition: ${s.firstFrame}`
         : s.noCharacter
         ? `The first image is the room. Create one new photorealistic 16:9 widescreen cinematic film still of this exact room, keeping the lamp design, materials and lighting identical to the reference. The lamp in the reference is the ONLY lamp design in this film — reproduce it exactly.${note} This is a POV frame from a movie — what a person standing in the room sees. Nobody is in frame. Full-bleed widescreen, zero black bars or borders. Composition: ${s.firstFrame}`
@@ -524,43 +636,103 @@ export async function makeFilm(cfg, opts) {
       // progressive reference fallback: full chain -> canon only -> set only
       const attempts = [[refs, chainNote]];
       if (refs.length > baseRefs.length) attempts.push([baseRefs, '']);
-      if (!s.noCharacter) attempts.push([[setPath], ' There is only one reference image: the room. Keep it exact.']);
-      let done = false;
+      if (!s.noCharacter && !ablate.canon) attempts.push([[setPath], ' There is only one reference image: the room. Keep it exact.']);
+      let best = null; // keep the highest-scoring attempt, never the last one
       for (const [r, note] of attempts) {
         try {
-          // closed loop: generate -> vision-judge against canon -> regenerate with correction
-          let correction = '', verdict = null;
-          for (let qc = 0; qc < 3; qc++) {
-            fs.writeFileSync(framePath, await genImage(cfg, framePrompt(note) + correction, r));
-            verdict = await auditFrame(cfg, framePath, charPath, setPath, s.noCharacter || !!alt, s.firstFrame);
-            if (verdict.pass) break;
-            log(`  audit reject (${verdict.issues.join('; ').slice(0, 90)}) — regenerating …`);
-            correction = ` PREVIOUS ATTEMPT WAS REJECTED for these defects: ${verdict.issues.join('; ')}. Fix exactly these while keeping everything else identical to the references.`;
+          // closed loop: generate -> cross-family judge -> regenerate with the defect list
+          let correction = '';
+          for (let tryN = 0; tryN < (ablate.judge ? 1 : 3); tryN++) {
+            const buf = await genImage(cfg, framePrompt(note) + correction, r);
+            fs.writeFileSync(framePath, buf);
+            const verdict = ablate.judge ? { pass: true, unverified: false, score: null, issues: [] }
+              : await auditFrame(cfg, framePath, charPath, setPath, s.noCharacter || !!alt, brief);
+            if (!best || (verdict.score ?? -1) > (best.verdict.score ?? -1)) best = { buf, verdict, refs: r.length };
+            if (verdict.pass) { best = { buf, verdict, refs: r.length }; break; }
+            log(`  audit ${verdict.score ?? '?'}/100 reject (${(verdict.issues || []).join('; ').slice(0, 90)}) — regenerating …`);
+            correction = ` PREVIOUS ATTEMPT WAS REJECTED for these defects: ${(verdict.issues || []).join('; ')}. Fix exactly these while keeping everything else identical to the references.`;
           }
-          ok(`shot${s.n}_frame.png${verdict && !verdict.pass ? ' (audit warnings kept)' : ''}${r.length < refs.length ? ` (${r.length} refs)` : ''}`);
-          done = true; break;
+          if (best?.verdict.pass) break;
         } catch (e) { log(`  frame with ${r.length} refs failed (${e.message.slice(0, 60)}) — reducing references …`); }
       }
-      if (!done) {
+      if (!best) {
         console.error(`\x1b[31m✕ shot ${s.n} frame failed on all reference sets\x1b[0m — continuing; re-run to retry`);
         errors.push(`shot ${s.n}: frame generation failed`);
-        continue;
+        return null;
+      }
+      fs.writeFileSync(framePath, best.buf); // the winner, not the last try
+      qc.frames[s.n] = { pass: best.verdict.pass, score: best.verdict.score, unverified: !!best.verdict.unverified, issues: best.verdict.issues || [] };
+      saveQc();
+      const tag = best.verdict.unverified ? ' \x1b[35m(UNVERIFIED — judge unavailable)\x1b[0m'
+        : best.verdict.pass ? ` (${best.verdict.score}/100)`
+        : ` \x1b[35m(BELOW FLOOR ${best.verdict.score}/100 — kept as best of 3, flagged in qc.json)\x1b[0m`;
+      ok(`shot${s.n}_frame.png${tag}${best.refs < refs.length ? ` (${best.refs} refs)` : ''}`);
+      if (!best.verdict.pass) errors.push(`shot ${s.n}: frame below QC floor (${best.verdict.score}/100)`);
+    }
+    return framePath;
+  };
+
+  const MOTION_SUFFIX = ` This is a living photograph: micro-motion everywhere (breath, cloth stirring, flame flicker, drifting dust), macro-motion only in the single described action. The action is already underway when the shot begins and is still in motion when it ends — natural continuous human movement with real weight, breath and slight imperfection, no held pose, no freeze. Physical persistence: every object keeps its exact place, shape and state for the whole shot unless this action moves it; light sources hold constant intensity; the same items that are in frame at the start are in frame at the end.`;
+
+  const makeClip = async (s, framePath) => {
+    const clipPath = path.join(dir, `shot${s.n}.mp4`);
+    if (fs.existsSync(clipPath)) { ok(`shot${s.n}.mp4 exists — skipping`); return clipPath; }
+    if (!framePath || !fs.existsSync(framePath)) return null;
+    log(`shot ${s.n} "${s.title}" — ${s.seconds}s (${cfg.models.video}) …`);
+    emit('video', s);
+    // Post-render QC: the clip itself is the most drift-prone artifact, so the
+    // rendered result is sampled and judged. A clip that drifts is re-rolled.
+    for (let attempt = 0; attempt < (videoQc ? 2 : 1); attempt++) {
+      try {
+        await genVideo(cfg, s.motion + MOTION_SUFFIX, framePath, s.seconds, clipPath);
+        console.log('');
+        if (!videoQc) { ok(`shot${s.n}.mp4`); return clipPath; }
+        const v = await auditClip(cfg, clipPath, charPath, setPath, s.noCharacter || !!(s.altCharacter || '').trim(), s.firstFrame);
+        qc.clips[s.n] = { pass: v.pass, score: v.score, unverified: !!v.unverified, issues: v.issues || [] };
+        saveQc();
+        if (v.pass || v.unverified || attempt === 1) {
+          const tag = v.unverified ? ' \x1b[35m(UNVERIFIED)\x1b[0m' : v.pass ? ` (clip QC ${v.score}/100)` : ` \x1b[35m(clip QC ${v.score}/100 — below floor, kept)\x1b[0m`;
+          ok(`shot${s.n}.mp4${tag}`);
+          if (!v.pass && !v.unverified) errors.push(`shot ${s.n}: clip below QC floor (${v.score}/100)`);
+          return clipPath;
+        }
+        log(`  clip QC ${v.score}/100 (${(v.issues || []).join('; ').slice(0, 80)}) — re-rolling clip …`);
+        fs.unlinkSync(clipPath);
+      } catch (e) {
+        console.log('');
+        console.error(`\x1b[31m✕ shot ${s.n}: ${e.message}\x1b[0m — continuing with remaining shots`);
+        errors.push(`shot ${s.n}: ${e.message}`);
+        return null;
       }
     }
-    if (skipVideo) continue;
-    const clipPath = path.join(dir, `shot${s.n}.mp4`);
-    if (fs.existsSync(clipPath)) { ok(`shot${s.n}.mp4 exists — skipping`); continue; }
-    log(`shot ${s.n} "${s.title}" — Veo ${s.seconds}s (${cfg.models.video}) …`);
-    emit('video', s);
+    return fs.existsSync(clipPath) ? clipPath : null;
+  };
+
+  // Freeze the last frame of a clip so the next shot can chain from real state.
+  const captureLastFrame = (s, clipPath) => {
+    if (!clipPath || !haveFfmpeg()) return;
+    const out = path.join(dir, `shot${s.n}_last.png`);
     try {
-      const motion = `${s.motion} This is a living photograph: micro-motion everywhere (breath, cloth stirring, flame flicker, drifting dust), macro-motion only in the single described action. The action is already underway when the shot begins and is still in motion when it ends — natural continuous human movement with real weight, breath and slight imperfection, no held pose, no freeze. Physical persistence: every object keeps its exact place, shape and state for the whole shot unless this action moves it; light sources hold constant intensity; the same items that are in frame at the start are in frame at the end.`;
-      await genVideo(cfg, motion, framePath, s.seconds, clipPath);
-      console.log('');
-      ok(`shot${s.n}.mp4`);
-    } catch (e) {
-      console.log('');
-      console.error(`\x1b[31m✕ shot ${s.n}: ${e.message}\x1b[0m — continuing with remaining shots`);
-      errors.push(`shot ${s.n}: ${e.message}`);
+      const d = clipDuration(clipPath);
+      execSync(`ffmpeg -y -v quiet -ss ${Math.max(0, d - 0.25).toFixed(2)} -i "${clipPath}" -frames:v 1 "${out}"`);
+    } catch {}
+  };
+
+  const shots = plan.shots.filter(s => !onlyShot || String(s.n) === String(onlyShot));
+  if (fast && !skipVideo) {
+    // --fast: all frames first (chained on frames), then clips in parallel.
+    const frames = [];
+    for (const s of shots) frames.push([s, await makeFrame(s)]);
+    let cursor = 0;
+    const worker = async () => { while (cursor < frames.length) { const i = cursor++; const [s, f] = frames[i]; await makeClip(s, f); } };
+    await Promise.all(Array.from({ length: Math.max(1, jobs) }, worker));
+  } else {
+    // default: strict serial so every shot inherits the previous clip's real end state
+    for (const s of shots) {
+      const framePath = await makeFrame(s);
+      if (skipVideo || !framePath) continue;
+      const clipPath = await makeClip(s, framePath);
+      captureLastFrame(s, clipPath);
     }
   }
 
@@ -602,11 +774,14 @@ async function main() {
   const flag = (name, dflt) => { const i = args.indexOf(name); return i > -1 ? args[i + 1] : dflt; };
   const result = await makeFilm(cfg, {
     seed: args[0],
-    shots: parseInt(flag('--shots', '3'), 10),
+    beats: parseInt(flag('--beats', flag('--shots', '3')), 10),
     name: flag('--name', null),
     onlyShot: flag('--shot', null),
     skipVideo: args.includes('--skip-video'),
     redoStills: args.includes('--redo-stills'),
+    fast: args.includes('--fast'),
+    videoQc: !args.includes('--no-video-qc'),
+    jobs: parseInt(flag('--jobs', '3'), 10),
   });
   console.log(`\n\x1b[32mDone.\x1b[0m Everything is in ${result.dir}`);
   if (result.errors.length) console.log(`\x1b[33mWith ${result.errors.length} issue(s):\x1b[0m ${result.errors.join(' | ')}`);

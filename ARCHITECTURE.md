@@ -278,6 +278,23 @@ Rules of the target:
 
 `lighthouse-production.html` is the reference implementation of this target.
 
+## FTL-1V — Verification layer (closed-loop QC)
+
+Generation without measurement is a lottery with extra steps. Every artifact the
+pipeline produces is judged before it is trusted:
+
+| Property | Rule |
+|---|---|
+| **Cross-family critic** | The generator is a Google image model, so the judge is Claude. A same-family critic shares the generator's blind spots and rates its own output favourably (self-preference bias). |
+| **Graded, not binary** | Four axes scored 0-100 — identity, wardrobe, set match, manifest compliance. A frame's score is its **weakest** axis; an average hides a failed face. |
+| **Hard floor** | Below 70 a frame is never shipped silently. Three attempts, each fed the previous attempt's defect list; the highest-scoring attempt wins (not the last one), and a sub-floor result is flagged in `qc.json` and in the run's error list. |
+| **Fail-closed reporting** | A judge outage marks the artifact `unverified` and prints a warning. It never counts as a pass. |
+| **Video is judged too** | Frames are cheap and clips are where drift actually appears (a glove changing mid-take is invisible to frame QC). Rendered clips are sampled and scored on the same rubric, and a failing clip is re-rolled once. |
+| **Chain only from verified state** | The next shot chains from the previous clip's **last rendered frame** — real state after the action — and only if that artifact passed. Chaining off a defective frame propagates the defect through the rest of the film. |
+
+`qc.json` in each project folder is the ledger: per-artifact score, pass/fail,
+unverified flag, and the concrete defects the judge named.
+
 ## Reusable Template (run any seed through this)
 
 ```
